@@ -5,7 +5,7 @@ from six import StringIO
 from gym import spaces, utils
 from gym.envs.toy_text import discrete
 
-MAP = [
+mazemap = [
     "s0000000",
     "01000000",
     "00100000",
@@ -24,17 +24,17 @@ class MazeEnv(discrete.DiscreteEnv):
 
     def __init__(self):
 
-        n = len(map)
-        m = len(map[0])
+        n = len(mazemap)
+        m = len(mazemap[0])
         sx = -1
         sy = -1
         for i in range(n):
             for j in range(m):
-                if map[i][j] == 's':
+                if mazemap[i][j] == 's':
                     sx = i
                     sy = j
-                    map[i][j] = '0'
-        self.map = map
+                    mazemap[i][j] = '0'
+        self.mazemap = mazemap
         self.sx = sx
         self.sy = sy
 
@@ -45,7 +45,7 @@ class MazeEnv(discrete.DiscreteEnv):
 
         for si in range(n):
             for sj in range(m):
-                if map[si][sj] == '1':
+                if mazemap[si][sj] == '1':
                     continue
                     if tx == si and ty == sj:
                         continue
@@ -58,7 +58,7 @@ class MazeEnv(discrete.DiscreteEnv):
                     else:
                         reward = 0
                         done = False
-                    if map[dx][dy] == '0':
+                    if mazemap[dx][dy] == '0':
                         newstate = self.encode(dx, dy)
                     else:
                         newstate = self.encode(si, sj)
@@ -72,10 +72,10 @@ class MazeEnv(discrete.DiscreteEnv):
     def decode(self, i, m):
         return [i / m, i % m]
 
-    def makeMap(self, map, sx, sy):
-        map = map.copy()
-        map[sx][sy] = 's'
-        return map
+    def makeMap(self, mazemap, sx, sy):
+        mazemap = mazemap.copy()
+        mazemap[sx][sy] = 's'
+        return mazemap
 
     def _render(self, mode='human', close=False):
         if close:
@@ -83,8 +83,8 @@ class MazeEnv(discrete.DiscreteEnv):
 
         outfile = StringIO() if mode == 'ansi' else sys.stdout
 
-        map = self.makeMap(self.map, self.sx, self.sy)
-        outfile.write('\n'.join(map) + '\n')
+        mazemap = self.makeMap(self.mazemap, self.sx, self.sy)
+        outfile.write('\n'.join(mazemap) + '\n')
 
         # No need to return anything for human
         if mode != 'human':
