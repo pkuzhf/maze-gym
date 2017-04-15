@@ -5,7 +5,7 @@ from six import StringIO
 from gym import spaces, utils
 from gym.envs.toy_text import discrete
 
-mazemap = [
+mazemap = np.asarray([
     "s0000000",
     "01000000",
     "00100000",
@@ -14,7 +14,7 @@ mazemap = [
     "00000100",
     "00000010",
     "0000000t",
-]
+], dtype='c')
 
 dirs = [[0, 1], [1, 0], [-1, 0], [0, -1]]
 
@@ -84,7 +84,7 @@ class MazeEnv(discrete.DiscreteEnv):
         outfile = StringIO() if mode == 'ansi' else sys.stdout
 
         mazemap = self.makeMap(self.mazemap, self.sx, self.sy)
-        outfile.write('\n'.join(mazemap) + '\n')
+        outfile.write('\n'.join([''.join(row) for row in mazemap.tolist()]) + '\n')
 
         # No need to return anything for human
         if mode != 'human':
