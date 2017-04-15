@@ -49,7 +49,7 @@ class MazeEnv(discrete.DiscreteEnv):
                     continue
                     if tx == si and ty == sj:
                         continue
-                for a in range(dirs):
+                for a in range(len(dirs)):
                     dx = si + dirs[a][0]
                     dy = sj + dirs[a][1]
                     if dx == tx and dy == ty:
@@ -59,9 +59,9 @@ class MazeEnv(discrete.DiscreteEnv):
                         reward = 0
                         done = False
                     if mazemap[dx][dy] == '0':
-                        newstate = self.encode(dx, dy)
+                        newstate = self.encode(dx, dy, m)
                     else:
-                        newstate = self.encode(si, sj)
+                        newstate = self.encode(si, sj, m)
                     P[state][a].append((1.0, newstate, reward, done))
         
         discrete.DiscreteEnv.__init__(self, nS, nA, P, isd)
