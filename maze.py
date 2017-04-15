@@ -41,7 +41,7 @@ class MazeEnv(discrete.DiscreteEnv):
         nS = n * m 
         nA = len(dirs)        
         isd = np.zeros(nS)
-        isd[self.encode(sx, sy)]
+        isd[self.encode(sx, sy, m)]
 
         for si in range(n):
             for sj in range(m):
