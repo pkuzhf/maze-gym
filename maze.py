@@ -28,20 +28,27 @@ class MazeEnv(discrete.DiscreteEnv):
         m = len(mazemap[0])
         sx = -1
         sy = -1
+        tx = -1
+        ty = -1
         for i in range(n):
             for j in range(m):
                 if mazemap[i][j] == 's':
                     sx = i
                     sy = j
                     mazemap[i][j] = '0'
+                if mazemap[i][j] == 't':
+                    tx = i
+                    ty = j
         self.mazemap = mazemap
         self.sx = sx
         self.sy = sy
+        self.m = m
 
         nS = n * m 
         nA = len(dirs)        
         isd = np.zeros(nS)
         isd[self.encode(sx, sy, m)]
+        p = {s : {a : [] for a in range(nA)} for s in range(nS)}
 
         for si in range(n):
             for sj in range(m):
@@ -49,6 +56,7 @@ class MazeEnv(discrete.DiscreteEnv):
                     continue
                     if tx == si and ty == sj:
                         continue
+                state = self.encode(si, sj, m)
                 for a in range(len(dirs)):
                     dx = si + dirs[a][0]
                     dy = sj + dirs[a][1]
@@ -58,13 +66,13 @@ class MazeEnv(discrete.DiscreteEnv):
                     else:
                         reward = 0
                         done = False
-                    if mazemap[dx][dy] == '0':
+                    if dx >= 0 and dx < n and dy >= 0 and dy < m and mazemap[dx][dy] == '0':
                         newstate = self.encode(dx, dy, m)
                     else:
                         newstate = self.encode(si, sj, m)
-                    P[state][a].append((1.0, newstate, reward, done))
+                    p[state][a].append((1.0, newstate, reward, done))
         
-        discrete.DiscreteEnv.__init__(self, nS, nA, P, isd)
+        discrete.DiscreteEnv.__init__(self, nS, nA, p, isd)
 
     def encode(self, sx, sy, m):
         return sx * m + sy
@@ -83,7 +91,8 @@ class MazeEnv(discrete.DiscreteEnv):
 
         outfile = StringIO() if mode == 'ansi' else sys.stdout
 
-        mazemap = self.makeMap(self.mazemap, self.sx, self.sy)
+        [x, y] = self.decode(self.s, self.m)
+        mazemap = self.makeMap(self.mazemap, x, y)
         outfile.write('\n'.join([''.join(row) for row in mazemap.tolist()]) + '\n')
 
         # No need to return anything for human
