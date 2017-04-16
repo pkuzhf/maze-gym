@@ -99,3 +99,7 @@ class MazeEnv(discrete.DiscreteEnv):
         if mode != 'human':
             return outfile
 
+    def _reset(self):
+        self.s = discrete.DiscreteEnv._reset(self)
+        return [self.mazemap, self.s]
+
