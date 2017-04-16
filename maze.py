@@ -6,14 +6,14 @@ from gym import spaces, utils
 from gym.envs.toy_text import discrete
 
 mazemap = np.asarray([
-    "s0000000",
+    "20000000",
     "01000000",
     "00100000",
     "00010000",
     "00001000",
     "00000100",
     "00000010",
-    "0000000t",
+    "00000003",
 ], dtype='c')
 
 dirs = [[0, 1], [1, 0], [-1, 0], [0, -1]]
