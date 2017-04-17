@@ -4,8 +4,8 @@ from six import StringIO
 
 from gym import spaces, utils
 from gym.envs.toy_text import discrete
-
-mazemap = np.asarray([
+from rl.core import Processor
+initmazemap = np.asarray([
     "20000000",
     "01000000",
     "00100000",
@@ -15,6 +15,12 @@ mazemap = np.asarray([
     "00000010",
     "00000003",
 ], dtype='c')
+
+mazemap = []
+for i in range(len(initmazemap)):
+    mazemap.append([])
+    for j in range(len(initmazemap[i])):
+        mazemap[i].append(int(initmazemap[i][j]))
 
 dirs = [[0, 1], [1, 0], [-1, 0], [0, -1]]
 
@@ -32,11 +38,11 @@ class MazeEnv(discrete.DiscreteEnv):
         ty = -1
         for i in range(n):
             for j in range(m):
-                if mazemap[i][j] == 's':
+                if mazemap[i][j] == 2:
                     sx = i
                     sy = j
-                    mazemap[i][j] = '0'
-                if mazemap[i][j] == 't':
+                    mazemap[i][j] = 0
+                if mazemap[i][j] == 3:
                     tx = i
                     ty = j
         self.mazemap = mazemap
@@ -52,7 +58,7 @@ class MazeEnv(discrete.DiscreteEnv):
 
         for si in range(n):
             for sj in range(m):
-                if mazemap[si][sj] == '1':
+                if mazemap[si][sj] == 1:
                     continue
                     if tx == si and ty == sj:
                         continue
@@ -66,7 +72,7 @@ class MazeEnv(discrete.DiscreteEnv):
                     else:
                         reward = 0
                         done = False
-                    if dx >= 0 and dx < n and dy >= 0 and dy < m and mazemap[dx][dy] == '0':
+                    if dx >= 0 and dx < n and dy >= 0 and dy < m and mazemap[dx][dy] == 0:
                         newstate = self.encode(dx, dy, m)
                     else:
                         newstate = self.encode(si, sj, m)
@@ -80,11 +86,6 @@ class MazeEnv(discrete.DiscreteEnv):
     def decode(self, i, m):
         return [i / m, i % m]
 
-    def makeMap(self, mazemap, sx, sy):
-        mazemap = mazemap.copy()
-        mazemap[sx][sy] = 's'
-        return mazemap
-
     def _render(self, mode='human', close=False):
         if close:
             return
@@ -92,8 +93,10 @@ class MazeEnv(discrete.DiscreteEnv):
         outfile = StringIO() if mode == 'ansi' else sys.stdout
 
         [x, y] = self.decode(self.s, self.m)
-        mazemap = self.makeMap(self.mazemap, x, y)
-        outfile.write('\n'.join([''.join(row) for row in mazemap.tolist()]) + '\n')
+        mazemap = self.mazemap
+        mazemap[x][y] = 2
+        outfile.write('\n'.join([''.join(str(ele) for ele in row) for row in mazemap]) + '\n')
+        mazemap[x][y] = 0
 
         # No need to return anything for human
         if mode != 'human':
@@ -103,3 +106,6 @@ class MazeEnv(discrete.DiscreteEnv):
         self.s = discrete.DiscreteEnv._reset(self)
         return [self.mazemap, self.s]
 
+    def _step(self, action):
+        [s, r, d, p] = discrete.DiscreteEnv._step(self, action)
+        return [[self.mazemap, s], r, d, p]
