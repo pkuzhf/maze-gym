@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from six import StringIO
+import copy
 
 from gym import spaces, utils
 from gym.envs.toy_text import discrete
@@ -86,6 +87,14 @@ class MazeEnv(discrete.DiscreteEnv):
     def decode(self, i, m):
         return [i / m, i % m]
 
+    def genObservation(self, mazemap, state):
+        m = len(mazemap[0])
+        [x, y] = self.decode(state, m)
+        mazemap[x][y] = 2
+        print['mazemap', mazemap]
+        print['self.mazemap', self.mazemap]
+        return mazemap
+
     def _render(self, mode='human', close=False):
         if close:
             return
@@ -104,8 +113,9 @@ class MazeEnv(discrete.DiscreteEnv):
 
     def _reset(self):
         self.s = discrete.DiscreteEnv._reset(self)
-        return [self.mazemap, self.s]
+        return self.genObservation(copy.deepcopy(self.mazemap), self.s)
 
     def _step(self, action):
         [s, r, d, p] = discrete.DiscreteEnv._step(self, action)
-        return [[self.mazemap, s], r, d, p]
+        return [self.genObservation(copy.deepcopy(self.mazemap), s), r, d, p]
+
