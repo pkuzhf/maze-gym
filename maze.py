@@ -10,21 +10,45 @@ from rl.core import Processor
 # right, down, up, left
 dirs = [[0, 1], [1, 0], [-1, 0], [0, -1]]
 
+# gen_method includes 'unification', 'manully_guided'
+#gen_method = 'unification'
+gen_method = 'manully_guided'
+
+evaluate_log_file = '/home/zhf/drive200g/openaigym/code/evaluate.txt'
+
+def inboard(x, y, n, m):
+    return x >= 0 and x < n and y >= 0 and y < m
+
+def setMapValue(mazemap, x, y, value):
+    for i in range(len(mazemap[x][y])):
+        mazemap[x][y][i] = 0
+    mazemap[x][y][value] = 1
+
+def getMapValue(mazemap, x, y):
+    for i in range(len(mazemap[x][y])):
+        if mazemap[x][y][i] == 1:
+            return i
+
+def displayMap(mazemap):
+    output = ''
+    for i in range(len(mazemap)):
+        for j in range(len(mazemap[i])):
+            for k in range(len(mazemap[i][j])):
+                if mazemap[i][j][k] == 1:
+                    output += str(k)
+        output += '\n'
+    print output
+
+def getDistance(sx, sy, tx, ty):
+    return abs(sx - tx) + abs(sy - ty)
+
 class MazeEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human', 'ansi']}
 
     def __init__(self):
-
-        [n, m, nS, nA, P, isd] = self.initMazeMap()
-        self.n = n
-        self.m = m
+        [nS, nA, P, isd] = self.initMazeMap()
         discrete.DiscreteEnv.__init__(self, nS, nA, P, isd)
-
-    def setMapValue(self, mazemap, x, y, value):
-        for i in range(len(mazemap[x][y])):
-            mazemap[x][y][i] = 0
-        mazemap[x][y][value] = 1
 
     def initMazeMap(self):
         n = 8
@@ -35,22 +59,57 @@ class MazeEnv(discrete.DiscreteEnv):
             mazemap.append([])
             for j in range(m):
                 mazemap[i].append(np.zeros(4))
-                self.setMapValue(mazemap, i, j, np.random.binomial(1, 0))
-        sx = np.random.randint(n)
-        sy = np.random.randint(m)
-        tx = np.random.randint(n)
-        ty = np.random.randint(m)
-        while tx == sx and ty == sy:
-            tx = np.random.randint(n)
-            ty = np.random.randint(m)
-            
-        self.setMapValue(mazemap, sx, sy, 0)
-        self.setMapValue(mazemap, tx, ty, 3)
-        #print np.array(mazemap)
+                setMapValue(mazemap, i, j, np.random.binomial(1, 0))
+        while True:
+            sx = np.random.randint(n)
+            sy = np.random.randint(m)
+            if getMapValue(mazemap, sx, sy) == 0:
+                setMapValue(mazemap, sx, sy, 2)
+                break
+
+        if gen_method == 'unification':
+            while True:
+                tx = np.random.randint(n)
+                ty = np.random.randint(m)
+                if getMapValue(mazemap, tx, ty) == 0:
+                    setMapValue(mazemap, tx, ty, 3)
+                    break
+
+        if gen_method == 'manully_guided':
+            f = open(evaluate_log_file, 'r')
+            distance = 1
+            for line in f:
+                [distance, score] = line.split()
+                distance = int(distance)
+                score = float(score)
+                if score < 0.8:
+                    break
+            f.close()
+
+            while True:
+                hasValidCell = False
+                for i in range(n):
+                    for j in range(m):
+                        if getDistance(sx, sy, i, j) == distance and getMapValue(mazemap, i, j) == 0:
+                            hasValidCell = True
+                if hasValidCell:
+                    break
+                else:
+                    distance += 1
+            while True:
+                tx = np.random.randint(n)
+                ty = np.random.randint(m)
+                if getDistance(sx, sy, tx, ty) == distance and getMapValue(mazemap, tx, ty) == 0:
+                    setMapValue(mazemap, tx, ty, 3)
+                    break
+        displayMap(mazemap)    
+        setMapValue(mazemap, sx, sy, 0)
+        
 
         self.mazemap = mazemap
         self.sx = sx
         self.sy = sy
+        self.n = n
         self.m = m
 
         nS = n * m 
@@ -61,7 +120,7 @@ class MazeEnv(discrete.DiscreteEnv):
 
         for si in range(n):
             for sj in range(m):
-                if mazemap[si][sj][1] == 1:
+                if getMapValue(mazemap, si, sj) == 1:
                     continue
                     if tx == si and ty == sj:
                         continue
@@ -75,12 +134,12 @@ class MazeEnv(discrete.DiscreteEnv):
                     else:
                         reward = 0
                         done = False
-                    if dx >= 0 and dx < n and dy >= 0 and dy < m and mazemap[dx][dy][0] == 1:
+                    if inboard(dx, dy, n, m) and getMapValue(mazemap, dx, dy) == 0:
                         newstate = self.encode(dx, dy, m)
                     else:
                         newstate = self.encode(si, sj, m)
                     P[state][a].append((1.0, newstate, reward, done))
-        return [n, m, nS, nA, P, isd]
+        return [nS, nA, P, isd]
 
     def encode(self, sx, sy, m):
         return sx * m + sy
@@ -93,7 +152,7 @@ class MazeEnv(discrete.DiscreteEnv):
         m = self.m
         [x, y] = self.decode(state, m)
         
-        self.setMapValue(mazemap, x, y, 2)
+        setMapValue(mazemap, x, y, 2)
         
         #print['mazemap', mazemap]
         #print['self.mazemap', self.mazemap]
@@ -107,18 +166,16 @@ class MazeEnv(discrete.DiscreteEnv):
 
         [x, y] = self.decode(self.s, self.m)
         mazemap = self.mazemap
-        self.setMapValue(mazemap, x, y, 2)
+        setMapValue(mazemap, x, y, 2)
         #outfile.write(str(np.array(mazemap)) + '\n')
-        self.setMapValue(mazemap, x, y, 0)
+        setMapValue(mazemap, x, y, 0)
 
         # No need to return anything for human
         if mode != 'human':
             return outfile
 
     def _reset(self):
-        [n, m, nS, nA, P, isd] = self.initMazeMap()
-        self.n = n
-        self.m = m
+        [nS, nA, P, isd] = self.initMazeMap()
         self.P = P
         self.isd = isd
         self.lastaction=None # for rendering
@@ -130,9 +187,9 @@ class MazeEnv(discrete.DiscreteEnv):
 
         self._seed()        
         self.s = discrete.DiscreteEnv._reset(self)
-        #self.setMapValue(self.mazemap, self.sx, self.sy, 2)
+        #setMapValue(self.mazemap, self.sx, self.sy, 2)
         #print np.array(self.mazemap)
-        #self.setMapValue(self.mazemap, self.sx, self.sy, 0)
+        #setMapValue(self.mazemap, self.sx, self.sy, 0)
         return self.genObservation(copy.deepcopy(self.mazemap), self.s)
 
     def _step(self, action):

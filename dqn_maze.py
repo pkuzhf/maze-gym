@@ -12,6 +12,7 @@ from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 from rl.core import Processor
 
+evaluate_log_file = '/home/zhf/drive200g/openaigym/code/evaluate.txt'
 
 ENV_NAME = 'Maze-v0'
 dirs = [[0, 1], [1, 0], [-1, 0], [0, -1]]
@@ -25,39 +26,59 @@ def setMapValue(mazemap, x, y, value):
 
 def getMapValue(mazemap, x, y):
     for i in range(len(mazemap[x][y])):
-    	if mazemap[x][y][i] == 1:
-    		return i
+        if mazemap[x][y][i] == 1:
+            return i
 
-def evaluate(observation, model):
-	output = ''
-	score = 0
-	n = len(observation[0][0])
-	m = len(observation[0][0][0])
-	tx = -1
-	ty = -1
-	for x in range(n):
-		for y in range(m):
-			if getMapValue(observation[0][0], x, y) == 2:
-				setMapValue(observation[0][0], x, y, 0)
-			if getMapValue(observation[0][0], x, y) == 3:
-				tx = x
-				ty = y
-	for x in range(n):
-		for y in range(m):
-			if getMapValue(observation[0][0], x, y) == 0:
-				setMapValue(observation[0][0], x, y, 2)
-				dir_id = np.array(model.predict(observation)).argmax()
-				output += dir_symbols[dir_id]
-				setMapValue(observation[0][0], x, y, 0)
-				if abs(x - tx) + abs(y - ty) > abs(x + dirs[dir_id][0] - tx) + abs(y + dirs[dir_id][1] - ty):
-					score += 1
-			else:
-				output += str(getMapValue(observation[0][0], x, y))
-			output += ' '
-		output +=  '\n'
-	return [output, score]
+def getDistance(sx, sy, tx, ty):
+    return abs(sx - tx) + abs(sy - ty)
+
+def evaluate(model):
+    n = 8
+    m = 8
+    mazemap = []
+    wall_prob = 0
+    for i in range(n):
+        mazemap.append([])
+        for j in range(m):
+            mazemap[i].append(np.zeros(4))
+            setMapValue(mazemap, i, j, np.random.binomial(1, wall_prob))
+    value_memory = {}
+    open(evaluate_log_file, 'w')
+    for distance in range(1, 16):
+        sum_score = 0
+        for sx in range(n):
+            for sy in range(m):
+                if getMapValue(mazemap, sx, sy) == 1:
+                    continue
+                setMapValue(mazemap, sx, sy, 2)
+                score = 0
+                count = 0
+                output = ''
+                for tx in range(n):
+                    for ty in range(m):
+                        if getMapValue(mazemap, tx, ty) == 0 and getDistance(sx, sy, tx, ty) <= distance:
+                            count += 1
+                            setMapValue(mazemap, tx, ty, 3)
+                            memory_id = str(sx) + '_' + str(sy) + '_' + str(tx) + '_' + str(ty)
+                            if memory_id in value_memory:
+                                dir_id = value_memory[memory_id]
+                            else:
+                                dir_id = np.array(model.predict(np.array([[mazemap]]))).argmax()
+                                value_memory[memory_id] = dir_id
+                            output += dir_symbols[dir_id]
+                            setMapValue(mazemap, tx, ty, 0)
+                            if getDistance(sx, sy, tx, ty) > getDistance(sx + dirs[dir_id][0], sy + dirs[dir_id][1], tx, ty):
+                                score += 1
+                sum_score += float(score) / count
+                setMapValue(mazemap, sx, sy, 0)
+        sum_score /= n * m
+        print [distance, sum_score]
+        f = open(evaluate_log_file, 'a')
+        f.write(str(distance) + '\t' + str(sum_score) + '\n')
+        f.close()
 
 # Get the environment and extract the number of actions.
+open(evaluate_log_file, 'w')
 env = gym.make(ENV_NAME)
 np.random.seed(123)
 env.seed(123)
@@ -94,21 +115,16 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 
-nround = 10000
+nround = 2000
 
-for _ in range(nround):
-	print 'round ' + str(_) + '/' + str(nround)
-	dqn.fit(env, nb_steps=500, visualize=True, verbose=2)
-	env = gym.make(ENV_NAME)
-	env.seed(123)
-	observation = np.array([[env.reset()]])
-	[action_map, score] = evaluate(observation, model) 
-	print action_map
-	print score
+for round in range(nround):
+    print 'round ' + str(round) + '/' + str(nround)
+    dqn.fit(env, nb_steps=5000, visualize=True, verbose=2)
+    evaluate(model)
 
 # After training is done, we save the final weights.
 dqn.save_weights('dqn_{}_weights_{}.h5f'.format(ENV_NAME, datetime.datetime.now().isoformat()), overwrite=True)   
 
-# Finally, evaluate our algorithm for 5 episodes.
+# Finally, evaluateObs our algorithm for 5 episodes.
 dqn.test(env, nb_episodes=5, visualize=True)
 
