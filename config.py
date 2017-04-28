@@ -1,0 +1,21 @@
+class Map:
+	Height = 8
+	Width = 8
+	WallDense = 0.
+
+class Cell:
+	Empty = 0
+	Wall = 1
+	Source = 2
+	Target = 3
+
+class StrongMazeEnv:
+	ScoreLevel = 0.8
+	EvaluateFile = '/tmp/evaluate.txt'
+
+class Generator:
+	RewardSampleN = 1
+	ExploreRate = 0.05
+
+class GeneratorEnv:
+	MaxGameStep = 200

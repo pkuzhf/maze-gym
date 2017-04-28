@@ -1,33 +1,8 @@
 import numpy as np
-import sys
-from six import StringIO
-import copy
-
-from gym import spaces, utils
-from gym.envs.toy_text import discrete
+import gym
+from gym import spaces
 from rl.core import Processor
-
-# right, down, up, left
-dirs = [[0, 1], [1, 0], [-1, 0], [0, -1]]
-
-# gen_method includes 'unification', 'manully_guided'
-#gen_method = 'unification'
-gen_method = 'manully_guided'
-
-evaluate_log_file = '/home/zhf/drive200g/openaigym/code/evaluate.txt'
-
-def inboard(x, y, n, m):
-    return x >= 0 and x < n and y >= 0 and y < m
-
-def setMapValue(mazemap, x, y, value):
-    for i in range(len(mazemap[x][y])):
-        mazemap[x][y][i] = 0
-    mazemap[x][y][value] = 1
-
-def getMapValue(mazemap, x, y):
-    for i in range(len(mazemap[x][y])):
-        if mazemap[x][y][i] == 1:
-            return i
+import config, utils
 
 def displayMap(mazemap):
     output = ''
@@ -39,50 +14,104 @@ def displayMap(mazemap):
         output += '\n'
     print output
 
-def getDistance(sx, sy, tx, ty):
-    return abs(sx - tx) + abs(sy - ty)
+def findSourceAndTarget(mazemap):
+    for i in range(len(mazemap)):
+        for j in range(len(mazemap[i])):
+            if utils.getCellValue(mazemap, i, j) == config.Cell.Source:
+                sx = i
+                sy = j
+            if utils.getCellValue(mazemap, i, j) == config.Cell.Target:
+                tx = i
+                ty = j
+    return [sx, sy, tx, ty]
 
-class MazeEnv(discrete.DiscreteEnv):
+class MazeEnv(gym.Env):
 
-    metadata = {'render.modes': ['human', 'ansi']}
+    metadata = {'render.modes': ['human']}
 
-    def __init__(self):
-        [nS, nA, P, isd] = self.initMazeMap()
-        discrete.DiscreteEnv.__init__(self, nS, nA, P, isd)
+    def __init__(self, mazemap = None):
 
-    def initMazeMap(self):
-        n = 8
-        m = 8
+        self.action_space = spaces.Discrete(4)
+        t = ()
+        for i in range(config.Map.Height * config.Map.Width):
+            t += (spaces.Discrete(4),)
+        self.observation_space = spaces.Tuple(t)
 
-        mazemap = []
-        for i in range(n):
-            mazemap.append([])
-            for j in range(m):
-                mazemap[i].append(np.zeros(4))
-                setMapValue(mazemap, i, j, np.random.binomial(1, 0))
-        while True:
-            sx = np.random.randint(n)
-            sy = np.random.randint(m)
-            if getMapValue(mazemap, sx, sy) == 0:
-                setMapValue(mazemap, sx, sy, 2)
-                break
+        self._seed()
 
-        if gen_method == 'unification':
+        self._reset(mazemap)
+
+    def _reset(self, mazemap = None):
+        n = config.Map.Height
+        m = config.Map.Width
+        if mazemap == None:
+            mazemap = []
+            for i in range(n):
+                mazemap.append([])
+                for j in range(m):
+                    mazemap[i].append(np.zeros(4))
+                    utils.setCellValue(mazemap, i, j, np.random.binomial(config.Cell.Wall, config.Map.WallDense))
+            while True:
+                sx = np.random.randint(n)
+                sy = np.random.randint(m)
+                if utils.getCellValue(mazemap, sx, sy) == config.Cell.Empty:
+                    utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
+                    break
             while True:
                 tx = np.random.randint(n)
                 ty = np.random.randint(m)
-                if getMapValue(mazemap, tx, ty) == 0:
-                    setMapValue(mazemap, tx, ty, 3)
+                if utils.getCellValue(mazemap, tx, ty) == config.Cell.Empty:
+                    utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
                     break
+        else:
+            [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
+               
+        self.source = np.array([sx, sy])
+        self.target = np.array([tx, ty])
+        self.mazemap = np.array(mazemap)
+        return self.mazemap
 
-        if gen_method == 'manully_guided':
-            f = open(evaluate_log_file, 'r')
+    def _step(self, action):
+        reward = 0
+        new_source = self.source + utils.dirs[action]
+        if not utils.inMap(new_source[0], new_source[1]):
+            done = False
+        else:
+            cell = utils.getCellValue(self.mazemap, new_source[0], new_source[1])
+            if cell == config.Cell.Target: 
+                done = True
+                reward = 1
+            else:
+                done = False
+            utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
+            utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
+        return self.mazemap, reward, done, {}
+
+class StrongMazeEnv(MazeEnv):
+
+    def _reset(self, mazemap = None):
+        n = config.Map.Height
+        m = config.Map.Width
+        if mazemap == None:
+            mazemap = []
+            for i in range(n):
+                mazemap.append([])
+                for j in range(m):
+                    mazemap[i].append([config.Cell.Empty] * 4)
+                    utils.setCellValue(mazemap, i, j, np.random.binomial(config.Cell.Wall, config.Map.WallDense))
+            while True:
+                sx = np.random.randint(n)
+                sy = np.random.randint(m)
+                if utils.getCellValue(mazemap, sx, sy) == config.Cell.Empty:
+                    utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
+                    break
+            f = open(config.StrongMazeEnv.EvaluateFile, 'r')
             distance = 1
             for line in f:
                 [distance, score] = line.split()
                 distance = int(distance)
                 score = float(score)
-                if score < 0.8:
+                if score < config.StrongMazeEnv.ScoreLevel:
                     break
             f.close()
 
@@ -90,7 +119,7 @@ class MazeEnv(discrete.DiscreteEnv):
                 hasValidCell = False
                 for i in range(n):
                     for j in range(m):
-                        if getDistance(sx, sy, i, j) == distance and getMapValue(mazemap, i, j) == 0:
+                        if utils.getDistance(sx, sy, i, j) == distance and utils.getCellValue(mazemap, i, j) == config.Cell.Empty:
                             hasValidCell = True
                 if hasValidCell:
                     break
@@ -99,100 +128,27 @@ class MazeEnv(discrete.DiscreteEnv):
             while True:
                 tx = np.random.randint(n)
                 ty = np.random.randint(m)
-                if getDistance(sx, sy, tx, ty) == distance and getMapValue(mazemap, tx, ty) == 0:
-                    setMapValue(mazemap, tx, ty, 3)
+                if utils.getDistance(sx, sy, tx, ty) == distance and utils.getCellValue(mazemap, tx, ty) == config.Cell.Empty:
+                    utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
                     break
-        displayMap(mazemap)    
-        setMapValue(mazemap, sx, sy, 0)
-        
+        else:
+            [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
 
-        self.mazemap = mazemap
-        self.sx = sx
-        self.sy = sy
-        self.n = n
-        self.m = m
+        self.source = np.array([sx, sy])
+        self.target = np.array([tx, ty])
+        self.mazemap = np.array(mazemap)
+        return self.mazemap
 
-        nS = n * m 
-        nA = len(dirs)        
-        isd = np.zeros(nS)
-        isd[self.encode(sx, sy, m)] = 1
-        P = {s : {a : [] for a in range(nA)} for s in range(nS)}
+class AdversarialMazeEnv(MazeEnv):
 
-        for si in range(n):
-            for sj in range(m):
-                if getMapValue(mazemap, si, sj) == 1:
-                    continue
-                    if tx == si and ty == sj:
-                        continue
-                state = self.encode(si, sj, m)
-                for a in range(len(dirs)):
-                    dx = si + dirs[a][0]
-                    dy = sj + dirs[a][1]
-                    if dx == tx and dy == ty:
-                        reward = 1
-                        done = True
-                    else:
-                        reward = 0
-                        done = False
-                    if inboard(dx, dy, n, m) and getMapValue(mazemap, dx, dy) == 0:
-                        newstate = self.encode(dx, dy, m)
-                    else:
-                        newstate = self.encode(si, sj, m)
-                    P[state][a].append((1.0, newstate, reward, done))
-        return [nS, nA, P, isd]
+    def __init__(self, map_generator):
+        self.map_generator = map_generator
+        super(AdversarialMazeEnv, self).__init__()
 
-    def encode(self, sx, sy, m):
-        return sx * m + sy
-
-    def decode(self, i, m):
-        return [i / m, i % m]
-
-    def genObservation(self, mazemap, state):
-        n = self.n
-        m = self.m
-        [x, y] = self.decode(state, m)
-        
-        setMapValue(mazemap, x, y, 2)
-        
-        #print['mazemap', mazemap]
-        #print['self.mazemap', self.mazemap]
-        return np.array(mazemap)
-
-    def _render(self, mode='human', close=False):
-        if close:
-            return
-
-        outfile = StringIO() if mode == 'ansi' else sys.stdout
-
-        [x, y] = self.decode(self.s, self.m)
-        mazemap = self.mazemap
-        setMapValue(mazemap, x, y, 2)
-        #outfile.write(str(np.array(mazemap)) + '\n')
-        setMapValue(mazemap, x, y, 0)
-
-        # No need to return anything for human
-        if mode != 'human':
-            return outfile
-
-    def _reset(self):
-        [nS, nA, P, isd] = self.initMazeMap()
-        self.P = P
-        self.isd = isd
-        self.lastaction=None # for rendering
-        self.nS = nS
-        self.nA = nA
-
-        self.action_space = spaces.Discrete(self.nA)
-        self.observation_space = spaces.Discrete(self.nS)
-
-        self._seed()        
-        self.s = discrete.DiscreteEnv._reset(self)
-        #setMapValue(self.mazemap, self.sx, self.sy, 2)
-        #print np.array(self.mazemap)
-        #setMapValue(self.mazemap, self.sx, self.sy, 0)
-        return self.genObservation(copy.deepcopy(self.mazemap), self.s)
-
-    def _step(self, action):
-        [s, r, d, p] = discrete.DiscreteEnv._step(self, action)
-        return [self.genObservation(copy.deepcopy(self.mazemap), s), r, d, p]
-
+    def _reset(self, mazemap = None):
+        mazemap = self.map_generator.generate()
+        [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
+        self.source = np.array([sx, sy])
+        self.target = np.array([tx, ty])
+        self.mazemap = np.array(mazemap)
+        return self.mazemap
