@@ -14,7 +14,7 @@ class StrongMazeEnv:
 	EvaluateFile = '/tmp/evaluate.txt'
 
 class Generator:
-	RewardSampleN = 1
+	RewardSampleN = 5
 	ExploreRate = 0.05
 
 class GeneratorEnv:

@@ -94,7 +94,7 @@ generator_model.add(MaxPooling2D(pool_size=(2, 2)))
 generator_model.add(Flatten())
 generator_model.add(Dense(256, activation='relu'))
 # generator_model.add(Dropout(0.5))
-generator_model.add(Dense(n * m + 1, activation='softmax'))
+generator_model.add(Dense(n * m, activation='softmax'))
 
 print(generator_model.summary())
 

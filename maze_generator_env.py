@@ -14,7 +14,7 @@ class MazeGeneratorEnv(gym.Env):
         self.agent_model = agent_model
         self.map_generator = map_generator
 
-        self.action_space = spaces.Discrete(config.Map.Height * config.Map.Width + 1)
+        self.action_space = spaces.Discrete(config.Map.Height * config.Map.Width)
 
         t = ()
         for i in range(config.Map.Height * config.Map.Width):
@@ -33,30 +33,28 @@ class MazeGeneratorEnv(gym.Env):
         assert self.action_space.contains(action)
         print ['self.gamestep', self.gamestep]
         print utils.displayMap(self.mazemap)
-        if action == config.Map.Height * config.Map.Width or self.gamestep == config.Map.Height * config.Map.Width:
-            if self.gamestep >= 2:
-                done = True
-                mazemap = copy.deepcopy(self.mazemap)
+        [x, y] = [action / config.Map.Width, action % config.Map.Width]
+        if utils.getCellValue(self.mazemap, x, y) == config.Cell.Empty:
+            if self.gamestep == 0:
+                utils.setCellValue(self.mazemap, x, y, config.Cell.Source)
+            elif self.gamestep == 1:
+                utils.setCellValue(self.mazemap, x, y, config.Cell.Target)
             else:
-                done = False
-        else:
+                utils.setCellValue(self.mazemap, x, y, config.Cell.Wall)
+            self.gamestep += 1
             done = False
-            [x, y] = [action / config.Map.Width, action % config.Map.Width]
-            if utils.getCellValue(self.mazemap, x, y) == config.Cell.Empty:
-                if self.gamestep == 0:
-                    utils.setCellValue(self.mazemap, x, y, config.Cell.Source)
-                elif self.gamestep == 1:
-                    utils.setCellValue(self.mazemap, x, y, config.Cell.Target)
-                else:
-                    utils.setCellValue(self.mazemap, x, y, config.Cell.Wall)
-                self.gamestep += 1
-        
+        elif self.gamestep >= 2:
+            done = True
+
         agent_rewards = []
         for _ in range(config.Generator.RewardSampleN):
-            if not done:
+            if done:
+                mazemap = copy.deepcopy(self.mazemap)
+            else:
                 mazemap = self.map_generator.generate(copy.deepcopy(self.mazemap))
             agent_rewards.append(self._get_reward_from_agent(mazemap))
         reward = np.mean(agent_rewards) + np.std(agent_rewards)
+        print [reward, np.mean(agent_rewards), np.std(agent_rewards)]
         return self._get_obs(), reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
