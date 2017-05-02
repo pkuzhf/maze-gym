@@ -33,7 +33,7 @@ class env_generator:
         self.model = model
         self.np_random, seed = seeding.np_random()
 
-    def get_env_map(self, mazemap = None):
+    def get_env_map(self, mazemap=None):
 
         if mazemap == None:
             mazemap = utils.initMazeMap()
@@ -49,6 +49,7 @@ class env_generator:
             action = utils.categoricalSample(prob_n, self.np_random)
             if np.random.rand() < config.Generator.ExploreRate:
                 action = np.random.randint(config.Map.Height * config.Map.Width)
+
             [x, y] = [action / config.Map.Width, action % config.Map.Width]
             if utils.getCellValue(mazemap, x, y) == config.Cell.Empty:
                 if not_empty_count == 0:
@@ -60,4 +61,5 @@ class env_generator:
                 not_empty_count += 1
             elif not_empty_count >= 2:
                 break
+
         return mazemap

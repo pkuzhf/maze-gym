@@ -24,8 +24,12 @@ class env_gym(gym.Env):
         self.observation_space = spaces.Tuple(t)
 
         self._seed()
-
         self._reset()
+
+    def _reset(self):
+        self.gamestep = 0
+        self.mazemap = utils.initMazeMap()
+        return self._get_obs()
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -57,15 +61,19 @@ class env_gym(gym.Env):
                 mazemap = self.env_gen.get_env_map(copy.deepcopy(self.mazemap))
             agent_rewards.append(self._get_reward_from_agent(mazemap))
 
-        reward = np.mean(agent_rewards) + np.std(agent_rewards)
-        print [reward, np.mean(agent_rewards), np.std(agent_rewards)]
+        reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
+        reward = reward_mean + reward_std
+        print [reward, reward_mean, reward_std]
+
         return self._get_obs(), reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
-        print 'roll-out map'
-        utils.displayMap(mazemap)
+        #print 'roll-out map'
+        #utils.displayMap(mazemap)
+
         env = agent_gym(mazemap)
-        obs = env.reset()
+        #obs = env.reset()
+        obs = mazemap
         reward_episode = 0
         gamestep = 0
         while True:
@@ -82,8 +90,3 @@ class env_gym(gym.Env):
 
     def _get_obs(self):
         return self.mazemap
-
-    def _reset(self):
-        self.gamestep = 0
-        self.mazemap = utils.initMazeMap()
-        return self._get_obs()

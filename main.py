@@ -1,5 +1,5 @@
-import os
 import config
+from utils import *
 import datetime
 import numpy as np
 from env_gym import env_gym
@@ -40,11 +40,16 @@ agent_dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 
 nround = 2000
-result_folder = 'result/test' #datetime.datetime.now().isoformat()
-os.mkdir(result_folder)
+result_folder = 'result/test/' #datetime.datetime.now().isoformat()
+makedirs(result_folder)
+
 for round in range(nround):
-    print 'round ' + str(round) + '/' + str(nround)
+    print '\n\nround ' + str(round) + '/' + str(nround)
+
+    print '\n\nagent '
     agent_dqn.fit(agent_gym, nb_steps=500, visualize=True, verbose=2)
+
+    print '\n\nenv '
     env_dqn.fit(env_gym, nb_steps=500, visualize=True, verbose=2)
 
     agent_dqn.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)

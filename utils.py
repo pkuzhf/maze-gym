@@ -1,5 +1,6 @@
 import numpy as np
 import config
+import os
 
 # right, down, up, left
 dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
@@ -42,3 +43,16 @@ def displayMap(mazemap):
             output += str(getCellValue(mazemap, i, j))
         output += '\n'
     print output
+
+def remove(path):
+    if os.path.exists(path):
+        os.remove(path)
+
+def makedirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+def removedirs(path):
+    import shutil
+    if os.path.exists(path):
+        shutil.rmtree(path)
