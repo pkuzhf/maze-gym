@@ -1,8 +1,10 @@
 import numpy as np
+import config, utils
+
 import gym
 from gym import spaces
 from rl.core import Processor
-import config, utils
+
 
 def displayMap(mazemap):
     output = ''
@@ -13,6 +15,7 @@ def displayMap(mazemap):
                     output += str(k)
         output += '\n'
     print output
+
 
 def findSourceAndTarget(mazemap):
     for i in range(len(mazemap)):
@@ -25,11 +28,12 @@ def findSourceAndTarget(mazemap):
                 ty = j
     return [sx, sy, tx, ty]
 
-class MazeEnv(gym.Env):
+
+class agent_gym(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, mazemap = None):
+    def __init__(self, mazemap=None):
 
         self.action_space = spaces.Discrete(4)
         t = ()
@@ -41,7 +45,7 @@ class MazeEnv(gym.Env):
 
         self._reset(mazemap)
 
-    def _reset(self, mazemap = None):
+    def _reset(self, mazemap=None):
         n = config.Map.Height
         m = config.Map.Width
         if mazemap == None:
@@ -87,24 +91,44 @@ class MazeEnv(gym.Env):
             utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
         return self.mazemap, reward, done, {}
 
-class StrongMazeEnv(MazeEnv):
+
+class adversarial_agent_gym(agent_gym):
+
+    def __init__(self, env_generator):
+        self.env_generator = env_generator
+        super(adversarial_agent_gym, self).__init__()
+
+    def _reset(self, mazemap = None):
+        mazemap = self.env_generator.get_env_map()
+        [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
+        self.source = np.array([sx, sy])
+        self.target = np.array([tx, ty])
+        self.mazemap = np.array(mazemap)
+        return self.mazemap
+
+
+'''
+class strong_agent_gym(agent_gym):
 
     def _reset(self, mazemap = None):
         n = config.Map.Height
         m = config.Map.Width
         if mazemap == None:
+
             mazemap = []
             for i in range(n):
                 mazemap.append([])
                 for j in range(m):
                     mazemap[i].append([config.Cell.Empty] * 4)
                     utils.setCellValue(mazemap, i, j, np.random.binomial(config.Cell.Wall, config.Map.WallDense))
+
             while True:
                 sx = np.random.randint(n)
                 sy = np.random.randint(m)
                 if utils.getCellValue(mazemap, sx, sy) == config.Cell.Empty:
                     utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
                     break
+
             f = open(config.StrongMazeEnv.EvaluateFile, 'r')
             distance = 1
             for line in f:
@@ -125,6 +149,7 @@ class StrongMazeEnv(MazeEnv):
                     break
                 else:
                     distance += 1
+
             while True:
                 tx = np.random.randint(n)
                 ty = np.random.randint(m)
@@ -138,17 +163,4 @@ class StrongMazeEnv(MazeEnv):
         self.target = np.array([tx, ty])
         self.mazemap = np.array(mazemap)
         return self.mazemap
-
-class AdversarialMazeEnv(MazeEnv):
-
-    def __init__(self, map_generator):
-        self.map_generator = map_generator
-        super(AdversarialMazeEnv, self).__init__()
-
-    def _reset(self, mazemap = None):
-        mazemap = self.map_generator.generate()
-        [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
-        self.source = np.array([sx, sy])
-        self.target = np.array([tx, ty])
-        self.mazemap = np.array(mazemap)
-        return self.mazemap
+'''

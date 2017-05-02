@@ -1,18 +1,20 @@
+import copy
+import config, utils
+import numpy as np
+
 import gym
 from gym import spaces
 from gym.utils import seeding
-import config, utils
-import copy
-from gym.envs.toy_text.maze import MazeEnv
-import numpy as np
+from agent_gym import agent_gym
 
-class MazeGeneratorEnv(gym.Env):
+
+class env_gym(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, agent_model, map_generator):
-        self.agent_model = agent_model
-        self.map_generator = map_generator
+    def __init__(self, agent_net, env_gen):
+        self.agent_net = agent_net
+        self.env_gen = env_gen
 
         self.action_space = spaces.Discrete(config.Map.Height * config.Map.Width)
 
@@ -31,8 +33,10 @@ class MazeGeneratorEnv(gym.Env):
 
     def _step(self, action):
         assert self.action_space.contains(action)
-        print ['self.gamestep', self.gamestep]
-        print utils.displayMap(self.mazemap)
+        print ['gamestep', self.gamestep]
+        utils.displayMap(self.mazemap)
+
+        done = False
         [x, y] = [action / config.Map.Width, action % config.Map.Width]
         if utils.getCellValue(self.mazemap, x, y) == config.Cell.Empty:
             if self.gamestep == 0:
@@ -42,7 +46,6 @@ class MazeGeneratorEnv(gym.Env):
             else:
                 utils.setCellValue(self.mazemap, x, y, config.Cell.Wall)
             self.gamestep += 1
-            done = False
         elif self.gamestep >= 2:
             done = True
 
@@ -51,8 +54,9 @@ class MazeGeneratorEnv(gym.Env):
             if done:
                 mazemap = copy.deepcopy(self.mazemap)
             else:
-                mazemap = self.map_generator.generate(copy.deepcopy(self.mazemap))
+                mazemap = self.env_gen.get_env_map(copy.deepcopy(self.mazemap))
             agent_rewards.append(self._get_reward_from_agent(mazemap))
+
         reward = np.mean(agent_rewards) + np.std(agent_rewards)
         print [reward, np.mean(agent_rewards), np.std(agent_rewards)]
         return self._get_obs(), reward, done, {}
@@ -60,7 +64,7 @@ class MazeGeneratorEnv(gym.Env):
     def _get_reward_from_agent(self, mazemap):
         print 'roll-out map'
         utils.displayMap(mazemap)
-        env = MazeEnv(mazemap)
+        env = agent_gym(mazemap)
         obs = env.reset()
         reward_episode = 0
         gamestep = 0
@@ -68,7 +72,7 @@ class MazeGeneratorEnv(gym.Env):
             if gamestep == config.GeneratorEnv.MaxGameStep:
                 break
             gamestep += 1
-            prob_n = self.agent_model.predict(np.array([[obs]]))
+            prob_n = self.agent_net.predict(np.array([[obs]]))
             action = utils.categoricalSample(prob_n, self.np_random)
             obs, reward, done, info = env.step(action)
             reward_episode += reward
