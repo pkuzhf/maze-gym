@@ -5,10 +5,10 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
-from agent_gym import agent_gym
+from agent_gym import AGENT_GYM
 
 
-class env_gym(gym.Env):
+class ENV_GYM(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
@@ -29,7 +29,7 @@ class env_gym(gym.Env):
     def _reset(self):
         self.gamestep = 0
         self.mazemap = utils.initMazeMap()
-        return self._get_obs()
+        return self.mazemap
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -37,8 +37,6 @@ class env_gym(gym.Env):
 
     def _step(self, action):
         assert self.action_space.contains(action)
-        print ['gamestep', self.gamestep]
-        utils.displayMap(self.mazemap)
 
         done = False
         [x, y] = [action / config.Map.Width, action % config.Map.Width]
@@ -62,31 +60,28 @@ class env_gym(gym.Env):
             agent_rewards.append(self._get_reward_from_agent(mazemap))
 
         reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
-        reward = reward_mean + reward_std
-        print [reward, reward_mean, reward_std]
+        reward = -reward_mean
 
-        return self._get_obs(), reward, done, {}
+        #print ['gamestep', self.gamestep]
+        #utils.displayMap(self.mazemap)
+        #print [reward, reward_mean, reward_std]
+
+        return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
         #print 'roll-out map'
         #utils.displayMap(mazemap)
 
-        env = agent_gym(mazemap)
-        #obs = env.reset()
+        env = AGENT_GYM(mazemap)
         obs = mazemap
         reward_episode = 0
         gamestep = 0
-        while True:
-            if gamestep == config.GeneratorEnv.MaxGameStep:
-                break
+        while gamestep < config.GeneratorEnv.MaxGameStep:
             gamestep += 1
             prob_n = self.agent_net.predict(np.array([[obs]]))
             action = utils.categoricalSample(prob_n, self.np_random)
             obs, reward, done, info = env.step(action)
             reward_episode += reward
             if done:
-                break
+                env.reset()
         return reward_episode
-
-    def _get_obs(self):
-        return self.mazemap

@@ -2,15 +2,15 @@ import config
 from utils import *
 import datetime
 import numpy as np
-from env_gym import env_gym
-from agent_gym import adversarial_agent_gym
+from env_gym import ENV_GYM
+from agent_gym import ADVERSARIAL_AGENT_GYM
 from keras.optimizers import Adam
 from rl.core import Processor
 from rl.agents.dqn import DQNAgent as DQN
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 from agent import get_agent_net
-from env import get_env_net, env_generator
+from env import get_env_net, ENV_GENERATOR
 
 
 n = config.Map.Height
@@ -19,12 +19,12 @@ np.random.seed(123)
 
 env_net = get_env_net()
 agent_net = get_agent_net()
-env_gen = env_generator(env_net)
+env_gen = ENV_GENERATOR(env_net)
 
-env_gym = env_gym(agent_net, env_gen)
+env_gym = ENV_GYM(agent_net, env_gen)
 env_gym.seed(123)
 
-agent_gym = adversarial_agent_gym(env_gen)
+agent_gym = ADVERSARIAL_AGENT_GYM(env_gen)
 agent_gym.seed(123)
 
 

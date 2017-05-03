@@ -27,7 +27,7 @@ def get_env_net():
     return env_model
 
 
-class env_generator:
+class ENV_GENERATOR:
 
     def __init__(self, model):
         self.model = model

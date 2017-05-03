@@ -1,5 +1,5 @@
 import numpy as np
-import config, utils
+import config, utils, copy
 
 import gym
 from gym import spaces
@@ -29,11 +29,11 @@ def findSourceAndTarget(mazemap):
     return [sx, sy, tx, ty]
 
 
-class agent_gym(gym.Env):
+class AGENT_GYM(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, mazemap=None):
+    def __init__(self, ini_mazemap=None):
 
         self.action_space = spaces.Discrete(4)
         t = ()
@@ -41,71 +41,56 @@ class agent_gym(gym.Env):
             t += (spaces.Discrete(4),)
         self.observation_space = spaces.Tuple(t)
 
+        self.ini_mazemap = ini_mazemap
+
         self._seed()
+        self._reset()
 
-        self._reset(mazemap)
-
-    def _reset(self, mazemap=None):
-        n = config.Map.Height
-        m = config.Map.Width
-        if mazemap == None:
-            mazemap = []
-            for i in range(n):
-                mazemap.append([])
-                for j in range(m):
-                    mazemap[i].append(np.zeros(4))
-                    utils.setCellValue(mazemap, i, j, np.random.binomial(config.Cell.Wall, config.Map.WallDense))
-            while True:
-                sx = np.random.randint(n)
-                sy = np.random.randint(m)
-                if utils.getCellValue(mazemap, sx, sy) == config.Cell.Empty:
-                    utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
-                    break
-            while True:
-                tx = np.random.randint(n)
-                ty = np.random.randint(m)
-                if utils.getCellValue(mazemap, tx, ty) == config.Cell.Empty:
-                    utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
-                    break
-        else:
-            [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
-               
+    def _reset(self):
+        #utils.displayMap(self.ini_mazemap)
+        [sx, sy, tx, ty] = findSourceAndTarget(self.ini_mazemap)
         self.source = np.array([sx, sy])
         self.target = np.array([tx, ty])
-        self.mazemap = np.array(mazemap)
+        self.mazemap = copy.deepcopy(self.ini_mazemap)
         return self.mazemap
 
     def _step(self, action):
+
         reward = 0
         new_source = self.source + utils.dirs[action]
-        if not utils.inMap(new_source[0], new_source[1]):
-            done = False
-        else:
-            cell = utils.getCellValue(self.mazemap, new_source[0], new_source[1])
-            if cell == config.Cell.Target: 
-                done = True
-                reward = 1
-            else:
-                done = False
-            utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
-            utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
+
+        done = False
+        if utils.inMap(new_source[0], new_source[1]):
+
+            new_cell = utils.getCellValue(self.mazemap, new_source[0], new_source[1])
+            if new_cell != config.Cell.Wall:
+
+                utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
+                utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
+                self.source = new_source
+
+                #utils.displayMap(self.mazemap)
+
+                if new_cell == config.Cell.Target:
+                    done = True
+                    reward = 1
+                else:
+                    done = False
+
         return self.mazemap, reward, done, {}
 
 
-class adversarial_agent_gym(agent_gym):
+class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
 
     def __init__(self, env_generator):
         self.env_generator = env_generator
-        super(adversarial_agent_gym, self).__init__()
+        super(ADVERSARIAL_AGENT_GYM, self).__init__()
 
-    def _reset(self, mazemap = None):
-        mazemap = self.env_generator.get_env_map()
-        [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
-        self.source = np.array([sx, sy])
-        self.target = np.array([tx, ty])
-        self.mazemap = np.array(mazemap)
-        return self.mazemap
-
+    def _reset(self):
+        print 'reset adversarial_agent_gym'
+        self.ini_mazemap = self.env_generator.get_env_map()
+        utils.displayMap(self.ini_mazemap)
+        return super(ADVERSARIAL_AGENT_GYM, self)._reset()
 
 '''
 class strong_agent_gym(agent_gym):
