@@ -15,7 +15,7 @@ def get_agent_net():
     agent_model.add(Flatten())
     agent_model.add(Dense(256, activation='relu'))
     # agent_net.add(Dropout(0.5))
-    agent_model.add(Dense(4, activation='softmax'))
+    agent_model.add(Dense(4, activation=None))
 
     print(agent_model.summary())
     return agent_model

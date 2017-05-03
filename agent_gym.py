@@ -4,6 +4,7 @@ import config, utils, copy
 import gym
 from gym import spaces
 from rl.core import Processor
+from gym.utils import seeding
 
 
 def displayMap(mazemap):
@@ -88,6 +89,7 @@ class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
 
     def _reset(self):
         print 'reset adversarial_agent_gym'
+        self.env_generator.np_random, seed = seeding.np_random(123)
         self.ini_mazemap = self.env_generator.get_env_map()
         utils.displayMap(self.ini_mazemap)
         return super(ADVERSARIAL_AGENT_GYM, self)._reset()

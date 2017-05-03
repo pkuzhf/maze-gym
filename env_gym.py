@@ -26,6 +26,8 @@ class ENV_GYM(gym.Env):
         self._seed()
         self._reset()
 
+        self.agent_dqn = None
+
     def _reset(self):
         self.gamestep = 0
         self.mazemap = utils.initMazeMap()
@@ -65,6 +67,8 @@ class ENV_GYM(gym.Env):
         #print ['gamestep', self.gamestep]
         #utils.displayMap(self.mazemap)
         #print [reward, reward_mean, reward_std]
+        if done:
+            utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
@@ -72,14 +76,13 @@ class ENV_GYM(gym.Env):
         #print 'roll-out map'
         #utils.displayMap(mazemap)
 
-        env = AGENT_GYM(mazemap)
-        obs = mazemap
-        reward_episode = 0
         gamestep = 0
+        reward_episode = 0
+        env = AGENT_GYM(mazemap)
         while gamestep < config.GeneratorEnv.MaxGameStep:
             gamestep += 1
-            prob_n = self.agent_net.predict(np.array([[obs]]))
-            action = utils.categoricalSample(prob_n, self.np_random)
+            q_value = self.agent_net.predict(np.array([[mazemap]]))
+            action = self.agent_dqn.policy.select_action(q_value)
             obs, reward, done, info = env.step(action)
             reward_episode += reward
             if done:

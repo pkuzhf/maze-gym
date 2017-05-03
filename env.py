@@ -21,7 +21,7 @@ def get_env_net():
     env_model.add(Flatten())
     env_model.add(Dense(256, activation='relu'))
     # generator_model.add(Dropout(0.5))
-    env_model.add(Dense(n * m, activation='softmax'))
+    env_model.add(Dense(n * m, activation=None))
 
     print(env_model.summary())
     return env_model
@@ -35,7 +35,7 @@ class ENV_GENERATOR:
 
     def get_env_map(self, mazemap=None):
 
-        if mazemap == None:
+        if mazemap==None:
             mazemap = utils.initMazeMap()
 
         not_empty_count = 0
@@ -47,7 +47,7 @@ class ENV_GENERATOR:
         while True:
             prob_n = self.model.predict(np.array([[mazemap]]))
             action = utils.categoricalSample(prob_n, self.np_random)
-            if np.random.rand() < config.Generator.ExploreRate:
+            if self.np_random.rand() < config.Generator.ExploreRate:
                 action = np.random.randint(config.Map.Height * config.Map.Width)
 
             [x, y] = [action / config.Map.Width, action % config.Map.Width]
