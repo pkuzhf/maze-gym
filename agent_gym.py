@@ -45,7 +45,10 @@ class AGENT_GYM(gym.Env):
         self.ini_mazemap = ini_mazemap
 
         self._seed()
-        self._reset()
+
+    def _seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
 
     def _reset(self):
         #utils.displayMap(self.ini_mazemap)
@@ -57,10 +60,11 @@ class AGENT_GYM(gym.Env):
 
     def _step(self, action):
 
-        reward = 0
+        done = False
+        reward = -0.01
+
         new_source = self.source + utils.dirs[action]
 
-        done = False
         if utils.inMap(new_source[0], new_source[1]):
 
             new_cell = utils.getCellValue(self.mazemap, new_source[0], new_source[1])
@@ -69,28 +73,27 @@ class AGENT_GYM(gym.Env):
                 utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
                 utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
                 self.source = new_source
-
                 #utils.displayMap(self.mazemap)
 
-                if new_cell == config.Cell.Target:
-                    done = True
-                    reward = 1
-                else:
-                    done = False
+            if new_cell == config.Cell.Target:
+                reward = 1
+                done = True
+                #utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
 
 class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
 
-    def __init__(self, env_generator):
-        self.env_generator = env_generator
+    def __init__(self, env_gym):
+        self.env_gym = env_gym
         super(ADVERSARIAL_AGENT_GYM, self).__init__()
 
     def _reset(self):
         print 'reset adversarial_agent_gym'
-        self.env_generator.np_random, seed = seeding.np_random(123)
-        self.ini_mazemap = self.env_generator.get_env_map()
+        np.random.seed(123)
+        self.env_gym.seed(123)
+        self.ini_mazemap = self.env_gym.get_env_map()
         utils.displayMap(self.ini_mazemap)
         return super(ADVERSARIAL_AGENT_GYM, self)._reset()
 

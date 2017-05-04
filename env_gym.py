@@ -12,9 +12,9 @@ class ENV_GYM(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, agent_net, env_gen):
+    def __init__(self, agent_net, env_net):
+        self.env_net = env_net
         self.agent_net = agent_net
-        self.env_gen = env_gen
 
         self.action_space = spaces.Discrete(config.Map.Height * config.Map.Width)
 
@@ -26,6 +26,7 @@ class ENV_GYM(gym.Env):
         self._seed()
         self._reset()
 
+        self.env_dqn = None
         self.agent_dqn = None
 
     def _reset(self):
@@ -58,7 +59,7 @@ class ENV_GYM(gym.Env):
             if done:
                 mazemap = copy.deepcopy(self.mazemap)
             else:
-                mazemap = self.env_gen.get_env_map(copy.deepcopy(self.mazemap))
+                mazemap = self.get_env_map(copy.deepcopy(self.mazemap))
             agent_rewards.append(self._get_reward_from_agent(mazemap))
 
         reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
@@ -78,13 +79,39 @@ class ENV_GYM(gym.Env):
 
         gamestep = 0
         reward_episode = 0
-        env = AGENT_GYM(mazemap)
+        agent_gym = AGENT_GYM(mazemap)
         while gamestep < config.GeneratorEnv.MaxGameStep:
             gamestep += 1
-            q_value = self.agent_net.predict(np.array([[mazemap]]))
-            action = self.agent_dqn.policy.select_action(q_value)
-            obs, reward, done, info = env.step(action)
+            action = self.agent_dqn.forward(mazemap)
+            obs, reward, done, info = agent_gym.step(action)
             reward_episode += reward
             if done:
-                env.reset()
+                agent_gym.reset()
         return reward_episode
+
+    def get_env_map(self, mazemap=None):
+
+        if mazemap==None:
+            mazemap = utils.initMazeMap()
+
+        not_empty_count = 0
+        for i in range(config.Map.Height):
+            for j in range(config.Map.Width):
+                if utils.getCellValue(mazemap, i, j) != config.Cell.Empty:
+                    not_empty_count += 1
+
+        while True:
+            action = self.env_dqn.forward(mazemap)
+            [x, y] = [action / config.Map.Width, action % config.Map.Width]
+            if utils.getCellValue(mazemap, x, y) == config.Cell.Empty:
+                if not_empty_count == 0:
+                    utils.setCellValue(mazemap, x, y, config.Cell.Source)
+                elif not_empty_count == 1:
+                    utils.setCellValue(mazemap, x, y, config.Cell.Target)
+                else:
+                    utils.setCellValue(mazemap, x, y, config.Cell.Wall)
+                not_empty_count += 1
+            elif not_empty_count >= 2:
+                break
+
+        return mazemap

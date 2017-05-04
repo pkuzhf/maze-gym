@@ -18,4 +18,4 @@ class Generator:
 	ExploreRate = 0.05
 
 class GeneratorEnv:
-	MaxGameStep = 200
+	MaxGameStep = 500
