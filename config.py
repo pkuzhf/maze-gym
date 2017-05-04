@@ -22,4 +22,4 @@ class Generator:
 
 class Game:
 	MaxGameStep = 500
-	Seed = 123
+	Seed = 123456
