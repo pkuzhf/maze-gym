@@ -27,17 +27,17 @@ agent_gym = ADVERSARIAL_AGENT_GYM(env_gym)
 agent_gym.seed(config.Game.Seed)
 
 env_memory = SequentialMemory(limit=50000, window_length=1)
-env_dqn = DQN(model=env_net, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=10, target_model_update=1e-2,
-              policy=BoltzmannQPolicy(), test_policy=BoltzmannQPolicy())
-env_dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+env = DQN(model=env_net, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=10, target_model_update=1e-2,
+          policy=BoltzmannQPolicy(), test_policy=BoltzmannQPolicy())
+env.compile(Adam(lr=1e-3), metrics=['mae'])
 
 agent_memory = SequentialMemory(limit=50000, window_length=1)
-agent_dqn = DQN(model=agent_net, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=10, target_model_update=1e-2,
-                policy=EpsGreedyQPolicy(), test_policy=GreedyQPolicy())
-agent_dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+agent = DQN(model=agent_net, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=10, target_model_update=1e-2,
+            policy=EpsGreedyQPolicy(), test_policy=GreedyQPolicy())
+agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
-env_gym.env_dqn = env_dqn
-env_gym.agent_dqn = agent_dqn
+env_gym.env = env
+env_gym.agent = agent
 
 
 nround = 2000
@@ -48,11 +48,11 @@ for round in range(nround):
     print '\n\nround ' + str(round) + '/' + str(nround)
 
     print '\n\nagent '
-    agent_dqn.fit(agent_gym, nb_steps=50000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=True, verbose=2)
+    agent.fit(agent_gym, nb_steps=50000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=True, verbose=2)
 
     #print '\n\nenv '
-    #env_dqn.fit(env_gym, nb_steps=500, visualize=True, verbose=2)
+    #env.fit(env_gym, nb_steps=500, visualize=True, verbose=2)
 
-    agent_dqn.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
-    env_dqn.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)
+    agent.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
+    env.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)
 

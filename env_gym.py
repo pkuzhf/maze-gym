@@ -24,10 +24,9 @@ class ENV_GYM(gym.Env):
         self.observation_space = spaces.Tuple(t)
 
         self._seed()
-        self._reset()
 
-        self.env_dqn = None
-        self.agent_dqn = None
+        self.env = None
+        self.agent = None
 
     def _reset(self):
         self.gamestep = 0
@@ -82,11 +81,10 @@ class ENV_GYM(gym.Env):
         agent_gym = AGENT_GYM(mazemap)
         while gamestep < config.Game.MaxGameStep:
             gamestep += 1
-            action = self.agent_dqn.forward(mazemap)
+            action = self.agent.forward(mazemap)
             obs, reward, done, info = agent_gym.step(action)
             reward_episode += reward
             if done:
-                #agent_gym.reset()
                 break
 
         return reward_episode
@@ -103,7 +101,7 @@ class ENV_GYM(gym.Env):
                     not_empty_count += 1
 
         while True:
-            action = self.env_dqn.forward(mazemap)
+            action = self.env.forward(mazemap)
             [x, y] = [action / config.Map.Width, action % config.Map.Width]
             if utils.getCellValue(mazemap, x, y) == config.Cell.Empty:
                 if not_empty_count == 0:
