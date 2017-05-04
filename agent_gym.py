@@ -46,17 +46,17 @@ class AGENT_GYM(gym.Env):
 
         if utils.inMap(new_source[0], new_source[1]):
 
-            if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Target):
-                utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
-                utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
+            if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Target):
+                utils.setCellValue(self.mazemap, self.source[0], self.source[1], utils.Cell.Empty)
+                utils.setCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Source)
                 self.source = new_source
                 #utils.displayMap(self.mazemap)
                 reward = 1
                 done = True
 
-            if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Empty):
-                utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
-                utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
+            if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Empty):
+                utils.setCellValue(self.mazemap, self.source[0], self.source[1], utils.Cell.Empty)
+                utils.setCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Source)
                 self.source = new_source
                 #utils.displayMap(self.mazemap)
 
@@ -91,14 +91,14 @@ class strong_agent_gym(agent_gym):
             for i in range(n):
                 mazemap.append([])
                 for j in range(m):
-                    mazemap[i].append([config.Cell.Empty] * 4)
-                    utils.setCellValue(mazemap, i, j, np.random.binomial(config.Cell.Wall, config.Map.WallDense))
+                    mazemap[i].append([utils.Cell.Empty] * 4)
+                    utils.setCellValue(mazemap, i, j, np.random.binomial(utils.Cell.Wall, config.Map.WallDense))
 
             while True:
                 sx = np.random.randint(n)
                 sy = np.random.randint(m)
-                if utils.equalCellValue(mazemap, sx, sy, config.Cell.Empty):
-                    utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
+                if utils.equalCellValue(mazemap, sx, sy, utils.Cell.Empty):
+                    utils.setCellValue(mazemap, sx, sy, utils.Cell.Source)
                     break
 
             f = open(config.StrongMazeEnv.EvaluateFile, 'r')
@@ -115,7 +115,7 @@ class strong_agent_gym(agent_gym):
                 hasValidCell = False
                 for i in range(n):
                     for j in range(m):
-                        if utils.getDistance(sx, sy, i, j) == distance and utils.equalCellValue(mazemap, i, j, config.Cell.Empty):
+                        if utils.getDistance(sx, sy, i, j) == distance and utils.equalCellValue(mazemap, i, j, utils.Cell.Empty):
                             hasValidCell = True
                 if hasValidCell:
                     break
@@ -125,8 +125,8 @@ class strong_agent_gym(agent_gym):
             while True:
                 tx = np.random.randint(n)
                 ty = np.random.randint(m)
-                if utils.getDistance(sx, sy, tx, ty) == distance and utils.equalCellValue(mazemap, tx, ty, config.Cell.Empty):
-                    utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
+                if utils.getDistance(sx, sy, tx, ty) == distance and utils.equalCellValue(mazemap, tx, ty, utils.Cell.Empty):
+                    utils.setCellValue(mazemap, tx, ty, utils.Cell.Target)
                     break
         else:
             [sx, sy, tx, ty] = findSourceAndTarget(mazemap)

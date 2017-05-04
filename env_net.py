@@ -1,4 +1,4 @@
-import config
+import config, utils
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Reshape, Activation
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, GlobalAveragePooling2D
@@ -10,7 +10,7 @@ def get_env_net():
 
     n = config.Map.Height
     m = config.Map.Width
-    d = config.Cell.CellSize
+    d = utils.Cell.CellSize
 
     curdim = 8
 
@@ -40,9 +40,11 @@ def get_env_net0():
 
     n = config.Map.Height
     m = config.Map.Width
+    d = utils.Cell.CellSize
 
     env_model = Sequential()
-    env_model.add(Reshape((8, 8, 4), input_shape=(1, 8, 8, 4)))
+    env_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
+
     env_model.add(Conv2D(8, (3, 3), activation='relu'))
     env_model.add(Conv2D(8, (3, 3), activation='relu'))
     env_model.add(Conv2D(8, (3, 3), activation='relu'))

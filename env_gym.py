@@ -42,13 +42,13 @@ class ENV_GYM(gym.Env):
 
         done = False
         [x, y] = [action / config.Map.Width, action % config.Map.Width]
-        if utils.equalCellValue(self.mazemap, x, y, config.Cell.Empty):
+        if utils.equalCellValue(self.mazemap, x, y, utils.Cell.Empty):
             if self.gamestep == 0:
-                utils.setCellValue(self.mazemap, x, y, config.Cell.Source)
+                utils.setCellValue(self.mazemap, x, y, utils.Cell.Source)
             elif self.gamestep == 1:
-                utils.setCellValue(self.mazemap, x, y, config.Cell.Target)
+                utils.setCellValue(self.mazemap, x, y, utils.Cell.Target)
             else:
-                utils.setCellValue(self.mazemap, x, y, config.Cell.Wall)
+                utils.setCellValue(self.mazemap, x, y, utils.Cell.Wall)
             self.gamestep += 1
         elif self.gamestep >= 2:
             done = True
@@ -97,19 +97,19 @@ class ENV_GYM(gym.Env):
         not_empty_count = 0
         for i in range(config.Map.Height):
             for j in range(config.Map.Width):
-                if utils.nequalCellValue(mazemap, i, j, config.Cell.Empty):
+                if utils.nequalCellValue(mazemap, i, j, utils.Cell.Empty):
                     not_empty_count += 1
 
         while True:
             action = self.env.forward(mazemap)
             [x, y] = [action / config.Map.Width, action % config.Map.Width]
-            if utils.equalCellValue(mazemap, x, y, config.Cell.Empty):
+            if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
                 if not_empty_count == 0:
-                    utils.setCellValue(mazemap, x, y, config.Cell.Source)
+                    utils.setCellValue(mazemap, x, y, utils.Cell.Source)
                 elif not_empty_count == 1:
-                    utils.setCellValue(mazemap, x, y, config.Cell.Target)
+                    utils.setCellValue(mazemap, x, y, utils.Cell.Target)
                 else:
-                    utils.setCellValue(mazemap, x, y, config.Cell.Wall)
+                    utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
                 not_empty_count += 1
             elif not_empty_count >= 2:
                 break

@@ -21,17 +21,17 @@ def evaluate(agent_net):
         sum_score = 0
         for sx in range(n):
             for sy in range(m):
-                if utils.equalCellValue(mazemap, sx, sy, config.Cell.Wall):
+                if utils.equalCellValue(mazemap, sx, sy, utils.Cell.Wall):
                     continue
-                utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
+                utils.setCellValue(mazemap, sx, sy, utils.Cell.Source)
                 score = 0
                 count = 0
                 output = ''
                 for tx in range(n):
                     for ty in range(m):
-                        if utils.equalCellValue(mazemap, tx, ty, config.Cell.Empty) and utils.getDistance(sx, sy, tx, ty) <= distance:
+                        if utils.equalCellValue(mazemap, tx, ty, utils.Cell.Empty) and utils.getDistance(sx, sy, tx, ty) <= distance:
                             count += 1
-                            utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
+                            utils.setCellValue(mazemap, tx, ty, utils.Cell.Target)
                             memory_id = str(sx) + '_' + str(sy) + '_' + str(tx) + '_' + str(ty)
                             if memory_id in cell_value_memory:
                                 dir_id = cell_value_memory[memory_id]
@@ -39,11 +39,11 @@ def evaluate(agent_net):
                                 dir_id = np.array(agent_net.predict(np.array([[mazemap]]))).argmax()
                                 cell_value_memory[memory_id] = dir_id
                             output += utils.dir_symbols[dir_id]
-                            utils.setCellValue(mazemap, tx, ty, config.Cell.Empty)
+                            utils.setCellValue(mazemap, tx, ty, utils.Cell.Empty)
                             if utils.getDistance(sx, sy, tx, ty) > utils.getDistance(sx + utils.dirs[dir_id][0], sy + utils.dirs[dir_id][1], tx, ty):
                                 score += 1
                 sum_score += float(score) / count
-                utils.setCellValue(mazemap, sx, sy, config.Cell.Empty)
+                utils.setCellValue(mazemap, sx, sy, utils.Cell.Empty)
         sum_score /= n * m
         print [distance, sum_score]
         f = open(config.StrongMazeEnv.EvaluateFile, 'a')
