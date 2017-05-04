@@ -46,12 +46,15 @@ def get_agent_net0():
     agent_model = Sequential()
     agent_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
 
-    agent_model.add(Conv2D(8, (3, 3), activation='relu'))
-    agent_model.add(Conv2D(8, (3, 3), activation='relu'))
-    agent_model.add(Conv2D(8, (3, 3), activation='relu'))
+    agent_model.add(Conv2D(20, (3, 3), activation='relu'))
+    agent_model.add(Conv2D(30, (3, 3), activation='relu'))
+    agent_model.add(Conv2D(50, (3, 3), activation='relu'))
     agent_model.add(Flatten())
-    agent_model.add(Dense(256, activation='relu'))
-    agent_model.add(Dense(4, activation='softmax'))
+    agent_model.add(Dense(200, activation='relu'))
+    agent_model.add(Dense(150, activation='relu'))
+    agent_model.add(Dense(100, activation='relu'))
+    agent_model.add(Dense(50, activation='relu'))
+    agent_model.add(Dense(4, activation=None))
 
     print 'agent model:'
     print(agent_model.summary())
