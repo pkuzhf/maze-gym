@@ -80,13 +80,15 @@ class ENV_GYM(gym.Env):
         gamestep = 0
         reward_episode = 0
         agent_gym = AGENT_GYM(mazemap)
-        while gamestep < config.GeneratorEnv.MaxGameStep:
+        while gamestep < config.Game.MaxGameStep:
             gamestep += 1
             action = self.agent_dqn.forward(mazemap)
             obs, reward, done, info = agent_gym.step(action)
             reward_episode += reward
             if done:
-                agent_gym.reset()
+                #agent_gym.reset()
+                break
+
         return reward_episode
 
     def get_env_map(self, mazemap=None):

@@ -91,10 +91,12 @@ class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
 
     def _reset(self):
         print 'reset adversarial_agent_gym'
-        np.random.seed(123)
-        self.env_gym.seed(123)
+        np.random.seed(config.Game.Seed)
+        self.env_gym.seed(config.Game.Seed)
         self.ini_mazemap = self.env_gym.get_env_map()
         utils.displayMap(self.ini_mazemap)
+        np.random.seed(None)
+
         return super(ADVERSARIAL_AGENT_GYM, self)._reset()
 
 '''

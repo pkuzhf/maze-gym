@@ -17,5 +17,6 @@ class Generator:
 	RewardSampleN = 5
 	ExploreRate = 0.05
 
-class GeneratorEnv:
+class Game:
 	MaxGameStep = 500
+	Seed = 123
