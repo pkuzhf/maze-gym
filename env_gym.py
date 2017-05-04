@@ -42,7 +42,7 @@ class ENV_GYM(gym.Env):
 
         done = False
         [x, y] = [action / config.Map.Width, action % config.Map.Width]
-        if utils.getCellValue(self.mazemap, x, y) == config.Cell.Empty:
+        if utils.equalCellValue(self.mazemap, x, y, config.Cell.Empty):
             if self.gamestep == 0:
                 utils.setCellValue(self.mazemap, x, y, config.Cell.Source)
             elif self.gamestep == 1:
@@ -97,13 +97,13 @@ class ENV_GYM(gym.Env):
         not_empty_count = 0
         for i in range(config.Map.Height):
             for j in range(config.Map.Width):
-                if utils.getCellValue(mazemap, i, j) != config.Cell.Empty:
+                if utils.nequalCellValue(mazemap, i, j, config.Cell.Empty):
                     not_empty_count += 1
 
         while True:
             action = self.env.forward(mazemap)
             [x, y] = [action / config.Map.Width, action % config.Map.Width]
-            if utils.getCellValue(mazemap, x, y) == config.Cell.Empty:
+            if utils.equalCellValue(mazemap, x, y, config.Cell.Empty):
                 if not_empty_count == 0:
                     utils.setCellValue(mazemap, x, y, config.Cell.Source)
                 elif not_empty_count == 1:

@@ -21,7 +21,7 @@ def evaluate(agent_net):
         sum_score = 0
         for sx in range(n):
             for sy in range(m):
-                if utils.getCellValue(mazemap, sx, sy) == config.Cell.Wall:
+                if utils.equalCellValue(mazemap, sx, sy, config.Cell.Wall):
                     continue
                 utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
                 score = 0
@@ -29,7 +29,7 @@ def evaluate(agent_net):
                 output = ''
                 for tx in range(n):
                     for ty in range(m):
-                        if utils.getCellValue(mazemap, tx, ty) == config.Cell.Empty and utils.getDistance(sx, sy, tx, ty) <= distance:
+                        if utils.equalCellValue(mazemap, tx, ty, config.Cell.Empty) and utils.getDistance(sx, sy, tx, ty) <= distance:
                             count += 1
                             utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
                             memory_id = str(sx) + '_' + str(sy) + '_' + str(tx) + '_' + str(ty)

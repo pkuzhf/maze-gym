@@ -7,27 +7,6 @@ from rl.core import Processor
 from gym.utils import seeding
 
 
-def displayMap(mazemap):
-    output = ''
-    for i in range(len(mazemap)):
-        for j in range(len(mazemap[i])):
-            for k in range(len(mazemap[i][j])):
-                if mazemap[i][j][k] == 1:
-                    output += str(k)
-        output += '\n'
-    print output
-
-
-def findSourceAndTarget(mazemap):
-    for i in range(len(mazemap)):
-        for j in range(len(mazemap[i])):
-            if utils.getCellValue(mazemap, i, j) == config.Cell.Source:
-                sx = i
-                sy = j
-            if utils.getCellValue(mazemap, i, j) == config.Cell.Target:
-                tx = i
-                ty = j
-    return [sx, sy, tx, ty]
 
 
 class AGENT_GYM(gym.Env):
@@ -52,7 +31,7 @@ class AGENT_GYM(gym.Env):
 
     def _reset(self):
         #utils.displayMap(self.ini_mazemap)
-        [sx, sy, tx, ty] = findSourceAndTarget(self.ini_mazemap)
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(self.ini_mazemap)
         self.source = np.array([sx, sy])
         self.target = np.array([tx, ty])
         self.mazemap = copy.deepcopy(self.ini_mazemap)
@@ -67,15 +46,14 @@ class AGENT_GYM(gym.Env):
 
         if utils.inMap(new_source[0], new_source[1]):
 
-            new_cell = utils.getCellValue(self.mazemap, new_source[0], new_source[1])
-            if new_cell != config.Cell.Wall:
+            if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Wall):
 
                 utils.setCellValue(self.mazemap, self.source[0], self.source[1], config.Cell.Empty)
                 utils.setCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Source)
                 self.source = new_source
                 #utils.displayMap(self.mazemap)
 
-            if new_cell == config.Cell.Target:
+            if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], config.Cell.Target):
                 reward = 1
                 done = True
                 #utils.displayMap(self.mazemap)
@@ -91,8 +69,8 @@ class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
 
     def _reset(self):
         print 'reset adversarial_agent_gym'
-        #np.random.seed(config.Game.Seed)
-        #self.env_gym.seed(config.Game.Seed)
+        np.random.seed(config.Game.Seed)
+        self.env_gym.seed(config.Game.Seed)
         self.ini_mazemap = self.env_gym.get_env_map()
         utils.displayMap(self.ini_mazemap)
         np.random.seed(None)
@@ -117,7 +95,7 @@ class strong_agent_gym(agent_gym):
             while True:
                 sx = np.random.randint(n)
                 sy = np.random.randint(m)
-                if utils.getCellValue(mazemap, sx, sy) == config.Cell.Empty:
+                if utils.equalCellValue(mazemap, sx, sy, config.Cell.Empty):
                     utils.setCellValue(mazemap, sx, sy, config.Cell.Source)
                     break
 
@@ -135,7 +113,7 @@ class strong_agent_gym(agent_gym):
                 hasValidCell = False
                 for i in range(n):
                     for j in range(m):
-                        if utils.getDistance(sx, sy, i, j) == distance and utils.getCellValue(mazemap, i, j) == config.Cell.Empty:
+                        if utils.getDistance(sx, sy, i, j) == distance and utils.equalCellValue(mazemap, i, j, config.Cell.Empty):
                             hasValidCell = True
                 if hasValidCell:
                     break
@@ -145,7 +123,7 @@ class strong_agent_gym(agent_gym):
             while True:
                 tx = np.random.randint(n)
                 ty = np.random.randint(m)
-                if utils.getDistance(sx, sy, tx, ty) == distance and utils.getCellValue(mazemap, tx, ty) == config.Cell.Empty:
+                if utils.getDistance(sx, sy, tx, ty) == distance and utils.equalCellValue(mazemap, tx, ty, config.Cell.Empty):
                     utils.setCellValue(mazemap, tx, ty, config.Cell.Target)
                     break
         else:

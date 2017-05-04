@@ -12,9 +12,6 @@ from rl.memory import SequentialMemory
 from agent_net import get_agent_net
 from env_net import get_env_net
 
-
-n = config.Map.Height
-m = config.Map.Width
 np.random.seed(config.Game.Seed)
 
 env_net = get_env_net()
