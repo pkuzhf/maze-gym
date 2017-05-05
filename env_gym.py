@@ -54,31 +54,35 @@ class ENV_GYM(gym.Env):
             done = True
 
         agent_rewards = []
-        for _ in range(config.Generator.RewardSampleN):
-            if done:
-                mazemap = copy.deepcopy(self.mazemap)
-            else:
-                mazemap = self.get_env_map(copy.deepcopy(self.mazemap))
+        if done:
+            mazemap = copy.deepcopy(self.mazemap)
             agent_rewards.append(self._get_reward_from_agent(mazemap))
-
+        else:
+            for _ in range(config.Generator.RolloutSampleN):
+                mazemap = self.get_env_map(copy.deepcopy(self.mazemap))
+                agent_rewards.append(self._get_reward_from_agent(mazemap))
+                # print 'roll-out map'
+                # utils.displayMap(mazemap)
         reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
         reward = -reward_mean
 
-        #print ['gamestep', self.gamestep]
-        #utils.displayMap(self.mazemap)
-        #print [reward, reward_mean, reward_std]
-        if done:
-            utils.displayMap(self.mazemap)
+        print ['gamestep', self.gamestep, reward_mean]
+        utils.displayMap(self.mazemap)
+        #if done:
+        #    utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
-        #print 'roll-out map'
-        #utils.displayMap(mazemap)
+
+        if not self.isvalid_mazemap(mazemap):
+            return -100
+
+        agent_gym = AGENT_GYM(mazemap)
+        agent_gym.reset()
 
         gamestep = 0
         reward_episode = 0
-        agent_gym = AGENT_GYM(mazemap)
         while gamestep < config.Game.MaxGameStep:
             gamestep += 1
             action = self.agent.forward(mazemap)
@@ -91,7 +95,7 @@ class ENV_GYM(gym.Env):
 
     def get_env_map(self, mazemap=None):
 
-        if mazemap==None:
+        if mazemap is None:
             mazemap = utils.initMazeMap()
 
         not_empty_count = 0
@@ -115,3 +119,30 @@ class ENV_GYM(gym.Env):
                 break
 
         return mazemap
+
+    def isvalid_mazemap(self, mazemap):
+
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+
+        from collections import deque
+        queue = deque()
+        queue.append([sx,sy])
+        visited = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int)
+
+        while len(queue):
+            [cx, cy] = queue.popleft()
+            visited[cx][cy] = 1
+
+            for k in range(len(utils.dirs)):
+                [nx, ny] = [cx, cy] + utils.dirs[k]
+                if not utils.inMap(nx, ny) or visited[nx][ny]:
+                    continue
+                if utils.equalCellValue(mazemap, nx, ny, utils.Cell.Empty):
+                    queue.append([nx, ny])
+                if nx == tx and ny == ty:
+                    return True
+
+        print 'Invalid Map'
+        utils.displayMap(mazemap)
+
+        return False

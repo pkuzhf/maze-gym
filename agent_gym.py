@@ -73,7 +73,10 @@ class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
         print '\nreset adversarial_agent_gym'
         #np.random.seed(config.Game.Seed)
         #self.env_gym.seed(config.Game.Seed)
-        self.ini_mazemap = self.env_gym.get_env_map()
+        while True:
+            self.ini_mazemap = self.env_gym.get_env_map()
+            if self.env_gym.isvalid_mazemap(self.ini_mazemap):
+                break
         utils.displayMap(self.ini_mazemap)
         np.random.seed(None)
 

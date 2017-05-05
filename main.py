@@ -45,10 +45,10 @@ for round in range(nround):
     print '\n\nround ' + str(round) + '/' + str(nround)
 
     print '\n\nagent '
-    agent.fit(agent_gym, nb_steps=50000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=True, verbose=2)
+    agent.fit(agent_gym, nb_steps=10000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=True, verbose=2)
 
-    #print '\n\nenv '
-    #env.fit(env_gym, nb_steps=500, visualize=True, verbose=2)
+    print '\n\nenv '
+    env.fit(env_gym, nb_steps=500, visualize=True, verbose=2)
 
     #agent.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
     #env.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)

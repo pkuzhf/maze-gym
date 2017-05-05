@@ -45,9 +45,9 @@ def get_env_net0():
     env_model = Sequential()
     env_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
 
-    env_model.add(Conv2D(20, (3, 3), activation='relu'))
-    env_model.add(Conv2D(30, (3, 3), activation='relu'))
-    env_model.add(Conv2D(50, (3, 3), activation='relu'))
+    env_model.add(Conv2D(16, (3, 3), activation='relu'))
+    env_model.add(Conv2D(32, (3, 3), activation='relu'))
+    env_model.add(Conv2D(64, (3, 3), activation='relu'))
     env_model.add(Flatten())
     env_model.add(Dense(200, activation='relu'))
     env_model.add(Dense(150, activation='relu'))
@@ -57,3 +57,4 @@ def get_env_net0():
     print 'env model:'
     print(env_model.summary())
     return env_model
+
