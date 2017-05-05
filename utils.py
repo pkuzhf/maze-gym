@@ -32,7 +32,7 @@ def getDistance(sx, sy, tx, ty):
     return abs(sx - tx) + abs(sy - ty)
 
 def findSourceAndTarget(mazemap):
-    [sx, sy, tx, ty] = [0, 0, 0, 0]
+    [sx, sy, tx, ty] = [-1, -1, -1, -1]
     for i in range(len(mazemap)):
         for j in range(len(mazemap[i])):
             if equalCellValue(mazemap, i, j, Cell.Source):
@@ -48,6 +48,8 @@ def initMazeMap():
     for i in range(config.Map.Height):
         for j in range(config.Map.Width):
             setCellValue(mazemap, i, j, Cell.Empty)
+    setCellValue(mazemap, 0, 0, Cell.Source)
+    setCellValue(mazemap, config.Map.Height-1, config.Map.Width-1, Cell.Target)
     return mazemap
 
 def nonempty_count(mazemap):

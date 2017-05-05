@@ -39,18 +39,10 @@ class ENV_GYM(gym.Env):
 
     def _act(self, mazemap, action):
 
-        nonempty_count = utils.nonempty_count(mazemap)
-
         done = False
         [x, y] = [action / config.Map.Width, action % config.Map.Width]
         if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
-            if nonempty_count == 0:
-                utils.setCellValue(mazemap, x, y, utils.Cell.Source)
-            elif nonempty_count == 1:
-                utils.setCellValue(mazemap, x, y, utils.Cell.Target)
-            else:
-                utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
-            nonempty_count += 1
+            utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
         else:
             done = True
             
@@ -61,26 +53,32 @@ class ENV_GYM(gym.Env):
         assert self.action_space.contains(action)
         done = self._act(self.mazemap, action)
 
-        mazemap = self.rollout_env_map(self.mazemap)
-        reward = self._get_reward_from_agent(mazemap)
-        # print 'roll-out map'
-        # utils.displayMap(mazemap)
+        agent_rewards = []
+        if done:
+            mazemap = copy.deepcopy(self.mazemap)
+            agent_rewards.append(self._get_reward_from_agent(mazemap))
+        else:
+            for _ in range(config.Generator.RolloutSampleN):
+                mazemap = self.rollout_env_map(self.mazemap)
+                agent_rewards.append(self._get_reward_from_agent(mazemap))
+        reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
+        reward = reward_mean
 
-        #self.gamestep += 1
+        self.gamestep += 1
         #print ['gamestep', self.gamestep, 'reward', reward]
         #utils.displayMap(self.mazemap)
-        if done:
-            utils.displayMap(self.mazemap)
+        #utils.displayMap(mazemap)
+        #if done:
+        #    utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
 
         #if not self.isvalid_mazemap(mazemap):
-        #    return -100
+        #    return -1
         #else:
-        return utils.nonempty_count(mazemap)
-
+        return utils.nonempty_count(mazemap)-2
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -115,7 +113,9 @@ class ENV_GYM(gym.Env):
     def isvalid_mazemap(self, mazemap):
 
         [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
-        if sx == 0 or sy == 0 or tx == 0 or ty == 0:
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            print 'Invalid Map'
+            utils.displayMap(mazemap)
             return False
 
         from collections import deque
@@ -138,5 +138,4 @@ class ENV_GYM(gym.Env):
 
         print 'Invalid Map'
         utils.displayMap(mazemap)
-
         return False

@@ -7,7 +7,9 @@ from agent_gym import ADVERSARIAL_AGENT_GYM
 from keras.optimizers import Adam
 from rl.core import Processor
 from rl.agents.dqn import DQNAgent as DQN
+from rl.agents.ddpg import DDPGAgent as PG
 from rl.policy import *
+from policy import *
 from rl.memory import SequentialMemory
 from agent_net import get_agent_net
 from env_net import get_env_net
@@ -25,7 +27,7 @@ agent_gym.seed(config.Game.Seed)
 
 env_memory = SequentialMemory(limit=50000, window_length=1)
 env = DQN(model=env_net, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=100, target_model_update=1e-2, #enable_dueling_network=True,
-          policy=BoltzmannQPolicy(), test_policy=GreedyQPolicy())
+          policy=BoltzmannQPolicy2(), test_policy=BoltzmannQPolicy2())
 env.compile(Adam(lr=1e-3), metrics=['mse'])
 
 agent_memory = SequentialMemory(limit=50000, window_length=1)
