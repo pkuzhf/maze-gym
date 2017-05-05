@@ -53,20 +53,13 @@ class ENV_GYM(gym.Env):
         elif self.gamestep >= 2:
             done = True
 
-        agent_rewards = []
-        if done:
-            mazemap = copy.deepcopy(self.mazemap)
-            agent_rewards.append(self._get_reward_from_agent(mazemap))
-        else:
-            for _ in range(config.Generator.RolloutSampleN):
-                mazemap = self.get_env_map(copy.deepcopy(self.mazemap))
-                agent_rewards.append(self._get_reward_from_agent(mazemap))
-                # print 'roll-out map'
-                # utils.displayMap(mazemap)
-        reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
-        reward = -reward_mean
+        mazemap = self.rollout_env_map(copy.deepcopy(self.mazemap))
+        reward = self._get_reward_from_agent(mazemap)
+        # print 'roll-out map'
+        # utils.displayMap(mazemap)
 
-        print ['gamestep', self.gamestep, reward_mean]
+        print ['gamestep', self.gamestep, 'reward', reward]
+        utils.displayMap(mazemap)
         utils.displayMap(self.mazemap)
         #if done:
         #    utils.displayMap(self.mazemap)
@@ -77,6 +70,9 @@ class ENV_GYM(gym.Env):
 
         if not self.isvalid_mazemap(mazemap):
             return -100
+        else:
+            return utils.not_empty_count(mazemap)
+
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -91,18 +87,14 @@ class ENV_GYM(gym.Env):
             if done:
                 break
 
-        return reward_episode
+        return -reward_episode
 
-    def get_env_map(self, mazemap=None):
+    def rollout_env_map(self, mazemap=None):
 
         if mazemap is None:
             mazemap = utils.initMazeMap()
 
-        not_empty_count = 0
-        for i in range(config.Map.Height):
-            for j in range(config.Map.Width):
-                if utils.nequalCellValue(mazemap, i, j, utils.Cell.Empty):
-                    not_empty_count += 1
+        not_empty_count = utils.not_empty_count(mazemap)
 
         while True:
             action = self.env.forward(mazemap)
@@ -115,7 +107,7 @@ class ENV_GYM(gym.Env):
                 else:
                     utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
                 not_empty_count += 1
-            elif not_empty_count >= 2:
+            else: #if not_empty_count >= 2: #replaced with valid check
                 break
 
         return mazemap
@@ -123,6 +115,8 @@ class ENV_GYM(gym.Env):
     def isvalid_mazemap(self, mazemap):
 
         [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == 0 or sy == 0 or tx == 0 or ty == 0:
+            return False
 
         from collections import deque
         queue = deque()

@@ -47,12 +47,12 @@ class AGENT_GYM(gym.Env):
         if utils.inMap(new_source[0], new_source[1]):
 
             if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Target):
+                reward = 1
+                done = True
                 utils.setCellValue(self.mazemap, self.source[0], self.source[1], utils.Cell.Empty)
                 utils.setCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Source)
                 self.source = new_source
                 #utils.displayMap(self.mazemap)
-                reward = 1
-                done = True
 
             if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Empty):
                 utils.setCellValue(self.mazemap, self.source[0], self.source[1], utils.Cell.Empty)
@@ -74,7 +74,7 @@ class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
         #np.random.seed(config.Game.Seed)
         #self.env_gym.seed(config.Game.Seed)
         while True:
-            self.ini_mazemap = self.env_gym.get_env_map()
+            self.ini_mazemap = self.env_gym.rollout_env_map()
             if self.env_gym.isvalid_mazemap(self.ini_mazemap):
                 break
         utils.displayMap(self.ini_mazemap)
