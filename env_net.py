@@ -38,8 +38,8 @@ def get_env_net():
 
 def get_env_net0():
 
-    n = config.Map.Height
-    m = config.Map.Width
+    m = config.Map.Height
+    n = config.Map.Width
     d = utils.Cell.CellSize
 
     env_model = Sequential()
@@ -52,7 +52,7 @@ def get_env_net0():
     env_model.add(Dense(200, activation='relu'))
     env_model.add(Dense(150, activation='relu'))
     env_model.add(Dense(100, activation='relu'))
-    env_model.add(Dense(n * m, activation=None))
+    env_model.add(Dense(config.Map.Height*config.Map.Width, activation=None))
 
     print 'env model:'
     print(env_model.summary())

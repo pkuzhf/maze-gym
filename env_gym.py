@@ -16,7 +16,7 @@ class ENV_GYM(gym.Env):
         self.env_net = env_net
         self.agent_net = agent_net
 
-        self.action_space = spaces.Discrete(config.Map.Height * config.Map.Width)
+        self.action_space = spaces.Discrete(config.Map.Height*config.Map.Width)
 
         t = ()
         for i in range(config.Map.Height * config.Map.Width):
@@ -37,41 +37,49 @@ class ENV_GYM(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _step(self, action):
-        assert self.action_space.contains(action)
+    def _act(self, mazemap, action):
+
+        nonempty_count = utils.nonempty_count(mazemap)
 
         done = False
         [x, y] = [action / config.Map.Width, action % config.Map.Width]
-        if utils.equalCellValue(self.mazemap, x, y, utils.Cell.Empty):
-            if self.gamestep == 0:
-                utils.setCellValue(self.mazemap, x, y, utils.Cell.Source)
-            elif self.gamestep == 1:
-                utils.setCellValue(self.mazemap, x, y, utils.Cell.Target)
+        if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
+            if nonempty_count == 0:
+                utils.setCellValue(mazemap, x, y, utils.Cell.Source)
+            elif nonempty_count == 1:
+                utils.setCellValue(mazemap, x, y, utils.Cell.Target)
             else:
-                utils.setCellValue(self.mazemap, x, y, utils.Cell.Wall)
-            self.gamestep += 1
-        elif self.gamestep >= 2:
+                utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
+            nonempty_count += 1
+        else:
             done = True
+            
+        return done
+        
+    def _step(self, action):
 
-        mazemap = self.rollout_env_map(copy.deepcopy(self.mazemap))
+        assert self.action_space.contains(action)
+        done = self._act(self.mazemap, action)
+
+        mazemap = self.rollout_env_map(self.mazemap)
         reward = self._get_reward_from_agent(mazemap)
         # print 'roll-out map'
         # utils.displayMap(mazemap)
 
-        print ['gamestep', self.gamestep, 'reward', reward]
-        utils.displayMap(mazemap)
-        utils.displayMap(self.mazemap)
-        #if done:
-        #    utils.displayMap(self.mazemap)
+        #self.gamestep += 1
+        #print ['gamestep', self.gamestep, 'reward', reward]
+        #utils.displayMap(self.mazemap)
+        if done:
+            utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
 
-        if not self.isvalid_mazemap(mazemap):
-            return -100
-        else:
-            return utils.not_empty_count(mazemap)
+        #if not self.isvalid_mazemap(mazemap):
+        #    return -100
+        #else:
+        return utils.nonempty_count(mazemap)
 
 
         agent_gym = AGENT_GYM(mazemap)
@@ -93,21 +101,13 @@ class ENV_GYM(gym.Env):
 
         if mazemap is None:
             mazemap = utils.initMazeMap()
-
-        not_empty_count = utils.not_empty_count(mazemap)
+        else:
+            mazemap = copy.deepcopy(mazemap)
 
         while True:
             action = self.env.forward(mazemap)
-            [x, y] = [action / config.Map.Width, action % config.Map.Width]
-            if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
-                if not_empty_count == 0:
-                    utils.setCellValue(mazemap, x, y, utils.Cell.Source)
-                elif not_empty_count == 1:
-                    utils.setCellValue(mazemap, x, y, utils.Cell.Target)
-                else:
-                    utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
-                not_empty_count += 1
-            else: #if not_empty_count >= 2: #replaced with valid check
+            done = self._act(mazemap, action)
+            if done:
                 break
 
         return mazemap
