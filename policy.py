@@ -79,7 +79,7 @@ class MaskedBoltzmannQPolicy2(Policy):
 
         q_values -= np.max(q_values)
         if self.mask is not None:
-            q_values -= self.mask * 1000
+            q_values -= self.mask * 1e20
 
         exp_values = np.exp(q_values)
         probs = exp_values / np.sum(exp_values)
@@ -108,7 +108,7 @@ class MaskedEpsGreedyQPolicy(Policy):
             action = np.random.random_integers(0, nb_actions-1)
         else:
             if self.mask is not None:
-                q_values += self.mask * -1e20
+                q_values -= self.mask * 1e20
             action = np.argmax(q_values)
         return action
 
@@ -129,7 +129,7 @@ class MaskedGreedyQPolicy(Policy):
     def select_action(self, q_values):
         assert q_values.ndim == 1
         if self.mask is not None:
-            q_values += self.mask * -1e20
+            q_values -= self.mask * 1e20
 
         action = np.argmax(q_values)
         return action

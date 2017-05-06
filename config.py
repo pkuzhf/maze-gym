@@ -8,7 +8,7 @@ class Map:
     WallDense = 0.
 
 class Generator:
-    RolloutSampleN = 5
+    RolloutSampleN = 10
     ExploreRate = 0.05
 
 class StrongMazeEnv:

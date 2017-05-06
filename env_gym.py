@@ -54,7 +54,6 @@ class ENV_GYM(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-
     def _act(self, mazemap, action):
 
         done = (action == config.Map.Height * config.Map.Width)
