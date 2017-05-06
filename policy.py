@@ -4,11 +4,21 @@ from rl.policy import *
 class BoltzmannQPolicy2(Policy):
     def __init__(self):
         super(BoltzmannQPolicy2, self).__init__()
+        self.minq = 1e20
+        self.maxq = -1e20
 
     def select_action(self, q_values):
         assert q_values.ndim == 1
         nb_actions = q_values.shape[0]
         q_values = q_values.astype('float64')
+        if np.isnan(q_values).any():
+            print q_values
+        if self.minq > np.min(q_values):
+            self.minq = np.min(q_values)
+            print self.minq, self.maxq
+        if self.maxq < np.max(q_values):
+            self.maxq = np.max(q_values)
+            print self.minq, self.maxq
         q_values -= np.max(q_values)
         exp_values = np.exp(q_values)
         probs = exp_values / np.sum(exp_values)

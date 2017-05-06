@@ -12,22 +12,21 @@ def get_env_net():
     m = config.Map.Width
     d = utils.Cell.CellSize
 
-    curdim = 8
+    curdim = 32
+    use_bn = False
 
     env_model = Sequential()
     env_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
 
-    for i in range(5):
-        env_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
-        env_model.add(BatchNormalization())
-        env_model.add(Activation(activation='relu'))
-        curdim = min(64, curdim * 2)
-
-    env_model.add(GlobalAveragePooling2D())
-
     for i in range(3):
-        env_model.add(Dense(100))
-        env_model.add(BatchNormalization())
+        env_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
+        if use_bn: env_model.add(BatchNormalization())
+        env_model.add(Activation(activation='relu'))
+        curdim = min(32, curdim * 2)
+
+    for i in range(1):
+        env_model.add(Dense(200))
+        if use_bn: env_model.add(BatchNormalization())
         env_model.add(Activation(activation='relu'))
 
     env_model.add(Dense(n * m, activation=None))
