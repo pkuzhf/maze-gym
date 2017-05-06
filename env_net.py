@@ -18,21 +18,25 @@ def get_env_net():
     env_model = Sequential()
     env_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
 
-    for i in range(5):
+    env_model.add(Conv2D(filters=curdim, kernel_size=(5, 5), padding='same', activation='relu'))
+
+    for i in range(11):
 
         if use_bn:
-            env_model.add(Conv2D(filters=curdim, kernel_size=(4, 4), padding='same'))
+            env_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
             env_model.add(BatchNormalization())
             env_model.add(Activation(activation='relu'))
         else:
-            env_model.add(Conv2D(filters=curdim, kernel_size=(4, 4), padding='same', activation='relu'))
+            env_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same', activation='relu'))
 
-        curdim = min(64, curdim * 2)
+        curdim = min(64, curdim * 1)
 
+    env_model.add(Conv2D(filters=1, kernel_size=(1, 1), padding='same', activation='relu'))
     env_model.add(Flatten())
 
-    curfilter = 512
-    for i in range(3):
+    curfilter = 256
+    for i in range(0):
+
         if use_bn:
             env_model.add(Dense(curfilter))
             env_model.add(BatchNormalization())

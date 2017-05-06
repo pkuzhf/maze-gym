@@ -29,6 +29,7 @@ def get_agent_net():
 
         curdim = min(32, curdim*2)
 
+    agent_model.add(Conv2D(filters=1, kernel_size=(1, 1), padding='same', activation='relu'))
     agent_model.add(Flatten())
 
     for i in range(3):

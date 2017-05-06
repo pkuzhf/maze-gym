@@ -31,6 +31,7 @@ class BoltzmannQPolicy2(Policy):
         config = super(BoltzmannQPolicy2, self).get_config()
         return config
 
+
 class EpsBoltzmannQPolicy2(Policy):
     def __init__(self, eps=.1):
         super(EpsBoltzmannQPolicy2, self).__init__()
@@ -92,3 +93,46 @@ class MaskedBoltzmannQPolicy2(Policy):
     def set_mask(self, mask):
         self.mask = mask
 
+
+class MaskedEpsGreedyQPolicy(Policy):
+    def __init__(self, eps=.1):
+        super(MaskedEpsGreedyQPolicy, self).__init__()
+        self.eps = eps
+        self.mask = None
+
+    def select_action(self, q_values):
+        assert q_values.ndim == 1
+        nb_actions = q_values.shape[0]
+
+        if np.random.uniform() < self.eps:
+            action = np.random.random_integers(0, nb_actions-1)
+        else:
+            if self.mask is not None:
+                q_values += self.mask * -1e20
+            action = np.argmax(q_values)
+        return action
+
+    def get_config(self):
+        config = super(MaskedEpsGreedyQPolicy, self).get_config()
+        config['eps'] = self.eps
+        return config
+
+    def set_mask(self, mask):
+        self.mask = mask
+
+class MaskedGreedyQPolicy(Policy):
+
+    def __init__(self):
+        super(MaskedGreedyQPolicy, self).__init__()
+        self.mask = None
+
+    def select_action(self, q_values):
+        assert q_values.ndim == 1
+        if self.mask is not None:
+            q_values += self.mask * -1e20
+
+        action = np.argmax(q_values)
+        return action
+
+    def set_mask(self, mask):
+        self.mask = mask
