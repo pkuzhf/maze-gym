@@ -32,13 +32,26 @@ class ENV_GYM(gym.Env):
         self.gamestep = 0
         self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
+        self.mask = self._getmask(self.mazemap)
+        self._setmask(self.mask)
         return self.mazemap
+
+    def _getmask(self, mazemap):
+        mask = np.zeros(self.action_space.n)
+        for i in range(config.Map.Height):
+            for j in range(config.Map.Width):
+                if utils.nequalCellValue(mazemap, i, j, utils.Cell.Empty):
+                    mask[i*config.Map.Width+j] = 1
+        return mask
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _act(self, mazemap, action):
+    def _setmask(self, mask):
+        self.env.policy.mask = mask
+
+    def _act(self, mazemap, mask, action):
 
         done = (action == config.Map.Height * config.Map.Width)
 
@@ -50,13 +63,17 @@ class ENV_GYM(gym.Env):
             else:
                 self.conflict_count += 1
                 conflict = True
+                action = self.env.forward(mazemap)
+
+        mask[action] = 1
+        self._setmask(mask)
 
         return done, conflict
         
     def _step(self, action):
 
         assert self.action_space.contains(action)
-        done, conflict = self._act(self.mazemap, action)
+        done, conflict = self._act(self.mazemap, self.mask, action)
 
         agent_rewards = []
         if done:
@@ -113,11 +130,16 @@ class ENV_GYM(gym.Env):
         else:
             mazemap = copy.deepcopy(mazemap)
 
+        mask = self._getmask(mazemap)
+        self._setmask(mask)
+
         while True:
             action = self.env.forward(mazemap)
-            done, conflict = self._act(mazemap, action)
+            done, conflict = self._act(mazemap, mask, action)
             if done:
                 break
+
+        self._setmask(self.mask)
 
         return mazemap
 

@@ -11,6 +11,7 @@ class BoltzmannQPolicy2(Policy):
         assert q_values.ndim == 1
         nb_actions = q_values.shape[0]
         q_values = q_values.astype('float64')
+
         if np.isnan(q_values).any():
             print q_values
         if self.minq > np.min(q_values):
@@ -19,6 +20,7 @@ class BoltzmannQPolicy2(Policy):
         if self.maxq < np.max(q_values):
             self.maxq = np.max(q_values)
             print self.minq, self.maxq
+
         q_values -= np.max(q_values)
         exp_values = np.exp(q_values)
         probs = exp_values / np.sum(exp_values)
@@ -52,4 +54,41 @@ class EpsBoltzmannQPolicy2(Policy):
         config['eps'] = self.eps
         return config
 
+
+class MaskedBoltzmannQPolicy2(Policy):
+    def __init__(self):
+        super(MaskedBoltzmannQPolicy2, self).__init__()
+        self.minq = 1e20
+        self.maxq = -1e20
+        self.mask = None
+
+    def select_action(self, q_values):
+        assert q_values.ndim == 1
+        nb_actions = q_values.shape[0]
+        q_values = q_values.astype('float64')
+
+        if np.isnan(q_values).any():
+            print q_values
+        if self.minq > np.min(q_values):
+            self.minq = np.min(q_values)
+            print self.minq, self.maxq
+        if self.maxq < np.max(q_values):
+            self.maxq = np.max(q_values)
+            print self.minq, self.maxq
+
+        q_values -= np.max(q_values)
+        if self.mask is not None:
+            q_values -= self.mask * 1000
+
+        exp_values = np.exp(q_values)
+        probs = exp_values / np.sum(exp_values)
+        action = np.random.choice(range(nb_actions), p=probs)
+        return action
+
+    def get_config(self):
+        config = super(MaskedBoltzmannQPolicy2, self).get_config()
+        return config
+
+    def set_mask(self, mask):
+        self.mask = mask
 

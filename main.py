@@ -27,7 +27,7 @@ agent_gym.seed(config.Game.Seed)
 
 env_memory = SequentialMemory(limit=50000, window_length=1)
 env = DQN(model=env_net, gamma=0.5, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=100, target_model_update=1e-2, enable_dueling_network=True,
-          policy=BoltzmannQPolicy2(), test_policy=BoltzmannQPolicy2())
+          policy=MaskedBoltzmannQPolicy2(), test_policy=MaskedBoltzmannQPolicy2())
 env.compile(Adam(lr=1e-3), metrics=['mae'])
 
 agent_memory = SequentialMemory(limit=50000, window_length=1)
