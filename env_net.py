@@ -29,7 +29,7 @@ def get_env_net():
         if use_bn: env_model.add(BatchNormalization())
         env_model.add(Activation(activation='relu'))
 
-    env_model.add(Dense(n * m, activation=None))
+    env_model.add(Dense(n * m + 1, activation=None))
 
     print 'env model:'
     print(env_model.summary())
@@ -51,7 +51,7 @@ def get_env_net0():
     env_model.add(Dense(200, activation='relu'))
     env_model.add(Dense(150, activation='relu'))
     env_model.add(Dense(100, activation='relu'))
-    env_model.add(Dense(config.Map.Height*config.Map.Width, activation=None))
+    env_model.add(Dense(m * n + 1, activation=None))
 
     print 'env model:'
     print(env_model.summary())

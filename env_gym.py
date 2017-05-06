@@ -16,7 +16,7 @@ class ENV_GYM(gym.Env):
         self.env_net = env_net
         self.agent_net = agent_net
 
-        self.action_space = spaces.Discrete(config.Map.Height*config.Map.Width)
+        self.action_space = spaces.Discrete(config.Map.Height*config.Map.Width+1)
 
         t = ()
         for i in range(config.Map.Height * config.Map.Width):
@@ -30,6 +30,7 @@ class ENV_GYM(gym.Env):
 
     def _reset(self):
         self.gamestep = 0
+        self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
         return self.mazemap
 
@@ -39,19 +40,23 @@ class ENV_GYM(gym.Env):
 
     def _act(self, mazemap, action):
 
-        done = False
-        [x, y] = [action / config.Map.Width, action % config.Map.Width]
-        if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
-            utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
-        else:
-            done = True
-            
-        return done
+        done = (action == config.Map.Height * config.Map.Width)
+
+        conflict = False
+        if not done:
+            [x, y] = [action / config.Map.Width, action % config.Map.Width]
+            if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
+                utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
+            else:
+                self.conflict_count += 1
+                conflict = True
+
+        return done, conflict
         
     def _step(self, action):
 
         assert self.action_space.contains(action)
-        done = self._act(self.mazemap, action)
+        done, conflict = self._act(self.mazemap, action)
 
         agent_rewards = []
         if done:
@@ -65,11 +70,17 @@ class ENV_GYM(gym.Env):
         reward = reward_mean
 
         self.gamestep += 1
-        #print ['gamestep', self.gamestep, 'reward', reward]
-        #utils.displayMap(self.mazemap)
-        #utils.displayMap(mazemap)
-        #if done:
-        #    utils.displayMap(self.mazemap)
+        if not conflict:
+            print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward]
+            utils.displayMap(self.mazemap)
+            #utils.displayMap(mazemap)
+        if done:
+            state = self.env.memory.get_recent_state(self.mazemap)
+            q_values = self.env.compute_q_values(state)
+            print q_values
+
+            print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward]
+            utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
@@ -78,7 +89,7 @@ class ENV_GYM(gym.Env):
         #if not self.isvalid_mazemap(mazemap):
         #    return -1
         #else:
-        return utils.nonempty_count(mazemap)-2
+        return (utils.nonempty_count(mazemap)-2) * 0.01
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -104,7 +115,7 @@ class ENV_GYM(gym.Env):
 
         while True:
             action = self.env.forward(mazemap)
-            done = self._act(mazemap, action)
+            done, conflict = self._act(mazemap, action)
             if done:
                 break
 
