@@ -1,6 +1,7 @@
 import copy
 import config, utils
 import numpy as np
+from collections import deque
 
 import gym
 from policy import *
@@ -28,6 +29,9 @@ class ENV_GYM(gym.Env):
 
         self.env = None
         self.agent = None
+        self.mask = None
+        self.conflict_count = 0
+        self.reward_his = deque(maxlen=1000)
 
     def _reset(self):
         self.gamestep = 0
@@ -99,8 +103,10 @@ class ENV_GYM(gym.Env):
             #q_values = self.env.compute_q_values(state)
             #print q_values
 
-            print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward]
+            print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward, 'his_avg_reward', np.mean(self.reward_his)]
             utils.displayMap(self.mazemap)
+
+        self.reward_his.append(reward)
 
         return self.mazemap, reward, done, {}
 

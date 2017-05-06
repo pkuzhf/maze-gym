@@ -26,12 +26,14 @@ agent_gym = ADVERSARIAL_AGENT_GYM(env_gym)
 agent_gym.seed(config.Game.Seed)
 
 env_memory = SequentialMemory(limit=50000, window_length=1)
-env = DQN(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=100, target_model_update=1e-2, enable_dueling_network=True,
+#env = PG(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=50, target_model_update=1, enable_dueling_network=True,
+#          policy=MaskedBoltzmannQPolicy2(), test_policy=MaskedBoltzmannQPolicy2())
+env = DQN(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=50, target_model_update=1e-2, enable_dueling_network=True,
           policy=MaskedBoltzmannQPolicy2(), test_policy=MaskedBoltzmannQPolicy2())
 env.compile(Adam(lr=1e-3), metrics=['mae'])
 
 agent_memory = SequentialMemory(limit=50000, window_length=1)
-agent = DQN(model=agent_net, gamma=1.0, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=100, target_model_update=1e-2, enable_dueling_network=True,
+agent = DQN(model=agent_net, gamma=1.0, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=50, target_model_update=1e-2, enable_dueling_network=True,
             policy=EpsGreedyQPolicy(), test_policy=GreedyQPolicy())
 agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
