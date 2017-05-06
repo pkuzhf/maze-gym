@@ -4,33 +4,37 @@ import datetime
 import numpy as np
 from env_gym import ENV_GYM
 from agent_gym import ADVERSARIAL_AGENT_GYM
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from rl.core import Processor
 from rl.agents.dqn import DQNAgent as DQN
 from rl.agents.ddpg import DDPGAgent as PG
 from rl.policy import *
+from rl.random import OrnsteinUhlenbeckProcess
 from policy import *
 from rl.memory import SequentialMemory
 from agent_net import get_agent_net
-from env_net import get_env_net
+from env_net import *
 
 np.random.seed(config.Game.Seed)
 
-env_net = get_env_net()
 agent_net = get_agent_net()
+#env_net = get_env_net()
+env_actor = get_env_actor()
+env_critic, action_input = get_env_critic()
 
-env_gym = ENV_GYM(agent_net, env_net)
+env_gym = ENV_GYM()
 env_gym.seed(config.Game.Seed)
 
 agent_gym = ADVERSARIAL_AGENT_GYM(env_gym)
 agent_gym.seed(config.Game.Seed)
 
+random_process = None #OrnsteinUhlenbeckProcess(theta=.15, mu=0, sigma=.3, size=env_gym.action_space.n)
+
 env_memory = SequentialMemory(limit=50000, window_length=1)
-#env = PG(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=50, target_model_update=1, enable_dueling_network=True,
+env = PG(actor=env_actor, critic=env_critic, critic_action_input=action_input, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup_actor=50, nb_steps_warmup_critic=50, target_model_update=1e-3, random_process=random_process)
+#env = DQN(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=50, target_model_update=1e-2, enable_dueling_network=True,
 #          policy=MaskedBoltzmannQPolicy2(), test_policy=MaskedBoltzmannQPolicy2())
-env = DQN(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=50, target_model_update=1e-2, enable_dueling_network=True,
-          policy=MaskedBoltzmannQPolicy2(), test_policy=MaskedBoltzmannQPolicy2())
-env.compile(Adam(lr=1e-3), metrics=['mae'])
+env.compile(SGD(lr=1e-3), metrics=['mae'])
 
 agent_memory = SequentialMemory(limit=50000, window_length=1)
 agent = DQN(model=agent_net, gamma=1.0, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=50, target_model_update=1e-2, enable_dueling_network=True,

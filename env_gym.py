@@ -5,6 +5,8 @@ from collections import deque
 
 import gym
 from policy import *
+from rl.agents.ddpg import DDPGAgent
+from rl.agents.dqn import DQNAgent
 from gym import spaces
 from gym.utils import seeding
 from agent_gym import AGENT_GYM
@@ -14,9 +16,7 @@ class ENV_GYM(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, agent_net, env_net):
-        self.env_net = env_net
-        self.agent_net = agent_net
+    def __init__(self):
 
         self.action_space = spaces.Discrete(config.Map.Height*config.Map.Width+1)
 
@@ -37,9 +37,10 @@ class ENV_GYM(gym.Env):
         self.gamestep = 0
         self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
-        if type(self.env.policy) == MaskedBoltzmannQPolicy2:
-            self.mask = self._getmask(self.mazemap)
-            self.env.policy.mask = self.mask
+        if type(self.env) == DQNAgent:
+            if type(self.env.policy) == MaskedBoltzmannQPolicy2:
+                self.mask = self._getmask(self.mazemap)
+                self.env.policy.mask = self.mask
         return self.mazemap
 
     def _getmask(self, mazemap):
@@ -71,12 +72,23 @@ class ENV_GYM(gym.Env):
                 conflict = True
                 done = True
 
-            if type(self.env.policy) == MaskedBoltzmannQPolicy2:
-                self.env.policy.mask[action] = 1
+            if type(self.env) == DQNAgent:
+                if type(self.env.policy) == MaskedBoltzmannQPolicy2:
+                    self.env.policy.mask[action] = 1
 
         return done, conflict
-        
+
+    def _get_action(self, action_base_vec):
+
+        action_base_vec -= np.max(action_base_vec)
+        exp_values = np.exp(action_base_vec)
+        probs = exp_values / np.sum(exp_values)
+        action = np.random.choice(range(self.action_space.n), p=probs)
+        return action
+
     def _step(self, action):
+
+        action = self._get_action(action)
 
         assert self.action_space.contains(action)
         done, conflict = self._act(self.mazemap, action)
@@ -93,9 +105,9 @@ class ENV_GYM(gym.Env):
         reward = reward_mean
 
         self.gamestep += 1
-        #if not conflict:
-        #    print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward]
-        #    utils.displayMap(self.mazemap)
+        if not conflict:
+            print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward]
+            utils.displayMap(self.mazemap)
             #utils.displayMap(mazemap)
         if done:
             #state = self.env.memory.get_recent_state(self.mazemap)
@@ -138,18 +150,20 @@ class ENV_GYM(gym.Env):
         else:
             mazemap = copy.deepcopy(mazemap)
 
-        if type(self.env.policy) == MaskedBoltzmannQPolicy2:
-            mask = self._getmask(mazemap)
-            self.env.policy.mask = mask
+        if type(self.env) == DQNAgent:
+            if type(self.env.policy) == MaskedBoltzmannQPolicy2:
+                mask = self._getmask(mazemap)
+                self.env.policy.mask = mask
 
         while True:
-            action = self.env.forward(mazemap)
+            action = self._get_action(self.env.forward(mazemap))
             done, conflict = self._act(mazemap, action)
             if done:
                 break
 
-        if type(self.env.policy) == MaskedBoltzmannQPolicy2:
-            self.env.policy.mask = self.mask
+        if type(self.env) == DQNAgent:
+            if type(self.env.policy) == MaskedBoltzmannQPolicy2:
+                self.env.policy.mask = self.mask
 
         return mazemap
 
