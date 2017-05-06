@@ -6,7 +6,7 @@ from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, GlobalAverage
 
 def get_env_net():
 
-    return get_env_net0()
+    #return get_env_net0()
 
     n = config.Map.Height
     m = config.Map.Width
@@ -18,16 +18,29 @@ def get_env_net():
     env_model = Sequential()
     env_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
 
-    for i in range(3):
-        env_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
-        if use_bn: env_model.add(BatchNormalization())
-        env_model.add(Activation(activation='relu'))
-        curdim = min(32, curdim * 2)
+    for i in range(5):
 
-    for i in range(1):
-        env_model.add(Dense(200))
-        if use_bn: env_model.add(BatchNormalization())
-        env_model.add(Activation(activation='relu'))
+        if use_bn:
+            env_model.add(Conv2D(filters=curdim, kernel_size=(4, 4), padding='same'))
+            env_model.add(BatchNormalization())
+            env_model.add(Activation(activation='relu'))
+        else:
+            env_model.add(Conv2D(filters=curdim, kernel_size=(4, 4), padding='same', activation='relu'))
+
+        curdim = min(64, curdim * 2)
+
+    env_model.add(Flatten())
+
+    curfilter = 512
+    for i in range(3):
+        if use_bn:
+            env_model.add(Dense(curfilter))
+            env_model.add(BatchNormalization())
+            env_model.add(Activation(activation='relu'))
+        else:
+            env_model.add(Dense(curfilter, activation='relu'))
+
+        curfilter = max((n*m+1)*2, curfilter // 2)
 
     env_model.add(Dense(n * m + 1, activation=None))
 

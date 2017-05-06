@@ -3,12 +3,12 @@ class Game:
     MaxGameStep = 500
 
 class Map:
-    Height = 8
-    Width = 8
+    Height = 4
+    Width = 4
     WallDense = 0.
 
 class Generator:
-    RolloutSampleN = 5
+    RolloutSampleN = 16
     ExploreRate = 0.05
 
 class StrongMazeEnv:

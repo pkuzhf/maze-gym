@@ -6,7 +6,7 @@ from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, GlobalAverage
 
 def get_agent_net():
 
-    return get_agent_net0()
+    #return get_agent_net0()
 
     n = config.Map.Height
     m = config.Map.Width
@@ -19,17 +19,25 @@ def get_agent_net():
     agent_model.add(Reshape((m, n, d), input_shape=(1, m, n, d)))
 
     for i in range(5):
-        agent_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
-        if use_bn: agent_model.add(BatchNormalization())
-        agent_model.add(Activation(activation='relu'))
+
+        if use_bn:
+            agent_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
+            agent_model.add(BatchNormalization())
+            agent_model.add(Activation(activation='relu'))
+        else:
+            agent_model.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same', activation='relu'))
+
         curdim = min(32, curdim*2)
 
-    agent_model.add(GlobalAveragePooling2D())
+    agent_model.add(Flatten())
 
     for i in range(3):
-        agent_model.add(Dense(100))
-        if use_bn: agent_model.add(BatchNormalization())
-        agent_model.add(Activation(activation='relu'))
+        if use_bn:
+            agent_model.add(Dense(100))
+            agent_model.add(BatchNormalization())
+            agent_model.add(Activation(activation='relu'))
+        else:
+            agent_model.add(Dense(100, activation='relu'))
 
     agent_model.add(Dense(4, activation=None))
 
