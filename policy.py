@@ -105,7 +105,10 @@ class MaskedEpsGreedyQPolicy(Policy):
         nb_actions = q_values.shape[0]
 
         if np.random.uniform() < self.eps:
-            action = np.random.random_integers(0, nb_actions-1)
+            probs  = np.ones(nb_actions)
+            probs -= self.mask
+            probs /= np.sum(probs)
+            action = np.random.choice(range(nb_actions), p=probs)
         else:
             if self.mask is not None:
                 q_values -= self.mask * 1e20

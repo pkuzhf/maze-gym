@@ -7,11 +7,12 @@ dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
 dir_symbols = ['>', 'v', '^', '<']
 
 class Cell:
-    Empty  = np.asarray([1,0,0,0])
-    Wall   = np.asarray([0,1,0,0])
-    Source = np.asarray([0,0,1,0])
-    Target = np.asarray([0,0,0,1])
-    CellSize = 4
+    Empty  = np.asarray([1,0,0,0,0])
+    Wall   = np.asarray([0,1,0,0,0])
+    Source = np.asarray([0,0,1,0,0])
+    Target = np.asarray([0,0,0,1,0])
+    Wall2  = np.asarray([0,0,0,0,1])
+    CellSize = 5
 
 def inMap(x, y):
     return x >= 0 and x < config.Map.Height and y >= 0 and y < config.Map.Width
@@ -52,13 +53,13 @@ def initMazeMap():
     setCellValue(mazemap, config.Map.Height-1, config.Map.Width-1, Cell.Target)
     return mazemap
 
-def nonempty_count(mazemap):
-    not_empty_count = 0
+def Wall2_count(mazemap):
+    Wall2_count = 0
     for i in range(0, config.Map.Height):
         for j in range(0, config.Map.Width):
-            if nequalCellValue(mazemap, i, j, Cell.Empty):
-                not_empty_count += 1
-    return not_empty_count
+            if equalCellValue(mazemap, i, j, Cell.Wall2):
+                Wall2_count += 1
+    return Wall2_count
 
 def displayMap(mazemap):
     output = ''
