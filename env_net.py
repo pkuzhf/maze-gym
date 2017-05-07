@@ -71,9 +71,9 @@ def get_env_actor():
         if use_bn:
             env_actor.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same'))
             env_actor.add(BatchNormalization())
-            env_actor.add(Activation(activation='relu'))
+            env_actor.add(Activation(activation='tanh'))
         else:
-            env_actor.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same', activation='relu'))
+            env_actor.add(Conv2D(filters=curdim, kernel_size=(3, 3), padding='same', activation='tanh'))
 
         curdim = min(64, curdim * 1)
 
@@ -86,9 +86,9 @@ def get_env_actor():
         if use_bn:
             env_actor.add(Dense(curfilter))
             env_actor.add(BatchNormalization())
-            env_actor.add(Activation(activation='relu'))
+            env_actor.add(Activation(activation='tanh'))
         else:
-            env_actor.add(Dense(curfilter, activation='relu'))
+            env_actor.add(Dense(curfilter, activation='tanh'))
 
         curfilter = max((n*m+1)*2, curfilter // 2)
 
@@ -106,7 +106,7 @@ def get_env_critic():
     d = utils.Cell.CellSize
 
     action_input = Input(shape=(n * m + 1,), name='action_input')
-    action_ = Dense(m * n, activation='relu')(action_input)
+    action_ = Dense(m * n, activation='tanh')(action_input)
     action_ = Reshape((m, n, 1))(action_)
 
     observation = Input(shape=(1, m, n, d), name='observation_input')
@@ -124,9 +124,9 @@ def get_env_critic():
         if use_bn:
             x = Conv2D(filters=curdim, kernel_size=(3, 3), padding='same')(x)
             x = BatchNormalization()(x)
-            x = Activation(activation='relu')(x)
+            x = Activation(activation='tanh')(x)
         else:
-            x = Conv2D(filters=curdim, kernel_size=(3, 3), padding='same', activation='relu')(x)
+            x = Conv2D(filters=curdim, kernel_size=(3, 3), padding='same', activation='tanh')(x)
 
         curdim = min(64, curdim * 1)
 
@@ -139,9 +139,9 @@ def get_env_critic():
         if use_bn:
             x = Dense(curfilter)(x)
             x = BatchNormalization()(x)
-            x = Activation(activation='relu')(x)
+            x = Activation(activation='tanh')(x)
         else:
-            x = Dense(curfilter, activation='relu')(x)
+            x = Dense(curfilter, activation='tanh')(x)
 
         curfilter = max(1 * 2, curfilter // 2)
 

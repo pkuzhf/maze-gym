@@ -32,6 +32,7 @@ class ENV_GYM(gym.Env):
         self.mask = None
         self.conflict_count = 0
         self.reward_his = deque(maxlen=1000)
+        self.action_reward_his = [np.zeros(2) for _ in range(self.action_space.n)]
 
     def _reset(self):
         self.gamestep = 0
@@ -70,7 +71,7 @@ class ENV_GYM(gym.Env):
             else:
                 self.conflict_count += 1
                 conflict = True
-                done = True
+                #done = True
 
             if type(self.env) == DQNAgent:
                 if type(self.env.policy) == MaskedBoltzmannQPolicy2:
@@ -80,10 +81,13 @@ class ENV_GYM(gym.Env):
 
     def _get_action(self, action_base_vec):
 
+        #print action_base_vec
+
         action_base_vec -= np.max(action_base_vec)
         exp_values = np.exp(action_base_vec)
         probs = exp_values / np.sum(exp_values)
         action = np.random.choice(range(self.action_space.n), p=probs)
+        #print action
         return action
 
     def _step(self, action):
@@ -92,7 +96,7 @@ class ENV_GYM(gym.Env):
 
         assert self.action_space.contains(action)
         done, conflict = self._act(self.mazemap, action)
-
+        #print [action, done, conflict]
         agent_rewards = []
         if done:
             mazemap = copy.deepcopy(self.mazemap)
@@ -116,8 +120,11 @@ class ENV_GYM(gym.Env):
 
             print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward, 'his_avg_reward', np.mean(self.reward_his)]
             utils.displayMap(self.mazemap)
-
+            print self.action_reward_his
         self.reward_his.append(reward)
+        count = self.action_reward_his[action][0]
+        self.action_reward_his[action][0] += 1
+        self.action_reward_his[action][1] = (self.action_reward_his[action][1] * count + reward) / (count + 1)
 
         return self.mazemap, reward, done, {}
 
