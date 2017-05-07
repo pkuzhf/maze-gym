@@ -30,10 +30,10 @@ class Policy(object):
             print(q_values)
         if self.minq > np.min(q_values):
             self.minq = np.min(q_values)
-            print(self.minq, self.maxq)
+            #print(q_values)
         if self.maxq < np.max(q_values):
             self.maxq = np.max(q_values)
-            print(self.minq, self.maxq)
+            #print(q_values)
 
 
 class RandomPolicy(Policy):
@@ -169,6 +169,7 @@ class EpsABPolicy(Policy):
         self.eps_decay_rate_each_step = eps_decay_rate_each_step
 
     def select_action(self, q_values):
+        print q_values
         self.log_qvalue(q_values)
         assert q_values.ndim == 1
         if np.random.uniform() < self.eps_forB:
