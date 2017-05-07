@@ -38,10 +38,8 @@ class ENV_GYM(gym.Env):
         self.gamestep = 0
         self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
-        if type(self.env) == DQNAgent:
-            if 'Masked' in type(self.env.policy).__name__:
-                self.mask = self._getmask(self.mazemap)
-                self.env.policy.mask = self.mask
+        self.mask = self._getmask(self.mazemap)
+        self.env.policy.mask = self.mask
         return self.mazemap
 
     def _getmask(self, mazemap):
@@ -56,7 +54,7 @@ class ENV_GYM(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _act(self, mazemap, action):
+    def _act(self, mazemap, action, mask):
 
         done = (action == config.Map.Height * config.Map.Width)
 
@@ -73,9 +71,8 @@ class ENV_GYM(gym.Env):
                 conflict = True
                 done = True
 
-            if type(self.env) == DQNAgent:
-                if 'Masked' in type(self.env.policy).__name__:
-                    self.env.policy.mask[action] = 1
+            if mask is not None:
+                mask[action] = 1
 
         if done:
             for i in range(config.Map.Height):
@@ -85,37 +82,16 @@ class ENV_GYM(gym.Env):
 
         return done, conflict
 
-    def _get_action(self, action_base_vec):
-
-        if type(self.env) == DQNAgent:
-            return action_base_vec
-        else:
-            #print action_base_vec
-            action_base_vec -= np.max(action_base_vec)
-            exp_values = np.exp(action_base_vec)
-            probs = exp_values / np.sum(exp_values)
-            action = np.random.choice(range(self.action_space.n), p=probs)
-            #print action
-            return action
 
     def _step(self, action):
-
-        action = self._get_action(action)
-
         assert self.action_space.contains(action)
-        done, conflict = self._act(self.mazemap, action)
+
+        done, conflict = self._act(self.mazemap, action, self.env.policy.mask)
 
         reward = 0
         if done:
             mazemap = copy.deepcopy(self.mazemap)
             reward = self._get_reward_from_agent(mazemap)
-        #else:
-        #    agent_rewards = []
-        #    for _ in range(config.Generator.RolloutSampleN):
-        #        mazemap = self.rollout_env_map(self.mazemap)
-        #        agent_rewards.append(self._get_reward_from_agent(mazemap))
-        #    reward_mean, reward_std = np.mean(agent_rewards), np.std(agent_rewards)
-        #    reward = reward_mean
 
         self.gamestep += 1
         #if not conflict:
@@ -132,9 +108,9 @@ class ENV_GYM(gym.Env):
             utils.displayMap(self.mazemap)
             self.reward_his.append(reward)
 
-        count = self.action_reward_his[action][0]
-        self.action_reward_his[action][0] += 1
-        self.action_reward_his[action][1] = (self.action_reward_his[action][1] * count + reward) / (count + 1)
+        #count = self.action_reward_his[action][0]
+        #self.action_reward_his[action][0] += 1
+        #self.action_reward_his[action][1] = (self.action_reward_his[action][1] * count + reward) / (count + 1)
 
         return self.mazemap, reward, done, {}
 
@@ -160,27 +136,23 @@ class ENV_GYM(gym.Env):
 
         return -reward_episode
 
-    def rollout_env_map(self, mazemap=None):
+    def rollout_env_map(self, mazemap=None, policy=None): #mazemap and policy state might get change
 
         if mazemap is None:
             mazemap = utils.initMazeMap()
-        else:
-            mazemap = copy.deepcopy(mazemap)
 
-        if type(self.env) == DQNAgent:
-            if 'Masked' in type(self.env.policy).__name__:
-                mask = self._getmask(mazemap)
-                self.env.policy.mask = mask
+        if policy == None:
+            policy = self.env.test_policy
+
+        mask = self._getmask(mazemap)
+        policy.mask = mask
 
         while True:
-            action = self._get_action(self.env.forward(mazemap))
-            done, conflict = self._act(mazemap, action)
+            q_values = self.env.compute_q_values([mazemap])
+            action = policy.select_action(q_values=q_values)
+            done, conflict = self._act(mazemap, action, policy.mask)
             if done:
                 break
-
-        if type(self.env) == DQNAgent:
-            if type(self.env.policy) == MaskedBoltzmannQPolicy2:
-                self.env.policy.mask = self.mask
 
         return mazemap
 
@@ -188,8 +160,8 @@ class ENV_GYM(gym.Env):
 
         [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
-            print 'Invalid Map'
-            utils.displayMap(mazemap)
+            #print 'Invalid Map'
+            #utils.displayMap(mazemap)
             return False
 
         from collections import deque
@@ -210,6 +182,6 @@ class ENV_GYM(gym.Env):
                 if nx == tx and ny == ty:
                     return True
 
-        print 'Invalid Map'
-        utils.displayMap(mazemap)
+        #print 'Invalid Map'
+        #utils.displayMap(mazemap)
         return False

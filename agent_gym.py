@@ -65,77 +65,19 @@ class AGENT_GYM(gym.Env):
 
 class ADVERSARIAL_AGENT_GYM(AGENT_GYM):
 
-    def __init__(self, env_gym):
+    def __init__(self, env_gym, rollout_policy):
         self.env_gym = env_gym
+        self.rollout_policy = rollout_policy
         super(ADVERSARIAL_AGENT_GYM, self).__init__()
 
     def _reset(self):
-        print '\nreset adversarial_agent_gym'
-        np.random.seed(config.Game.Seed)
-        self.env_gym.seed(config.Game.Seed)
+        #print '\nreset adversarial_agent_gym'
+        #np.random.seed(config.Game.Seed)
+        #self.env_gym.seed(config.Game.Seed)
         while True:
-            self.ini_mazemap = self.env_gym.rollout_env_map()
+            self.ini_mazemap = self.env_gym.rollout_env_map(policy=self.rollout_policy)
             if self.env_gym.isvalid_mazemap(self.ini_mazemap):
                 break
         utils.displayMap(self.ini_mazemap)
-        np.random.seed(None)
 
         return super(ADVERSARIAL_AGENT_GYM, self)._reset()
-
-'''
-class strong_agent_gym(agent_gym):
-
-    def _reset(self, mazemap = None):
-        n = config.Map.Height
-        m = config.Map.Width
-        if mazemap == None:
-
-            mazemap = []
-            for i in range(n):
-                mazemap.append([])
-                for j in range(m):
-                    mazemap[i].append([utils.Cell.Empty] * 4)
-                    utils.setCellValue(mazemap, i, j, np.random.binomial(utils.Cell.Wall, config.Map.WallDense))
-
-            while True:
-                sx = np.random.randint(n)
-                sy = np.random.randint(m)
-                if utils.equalCellValue(mazemap, sx, sy, utils.Cell.Empty):
-                    utils.setCellValue(mazemap, sx, sy, utils.Cell.Source)
-                    break
-
-            f = open(config.StrongMazeEnv.EvaluateFile, 'r')
-            distance = 1
-            for line in f:
-                [distance, score] = line.split()
-                distance = int(distance)
-                score = float(score)
-                if score < config.StrongMazeEnv.ScoreLevel:
-                    break
-            f.close()
-
-            while True:
-                hasValidCell = False
-                for i in range(n):
-                    for j in range(m):
-                        if utils.getDistance(sx, sy, i, j) == distance and utils.equalCellValue(mazemap, i, j, utils.Cell.Empty):
-                            hasValidCell = True
-                if hasValidCell:
-                    break
-                else:
-                    distance += 1
-
-            while True:
-                tx = np.random.randint(n)
-                ty = np.random.randint(m)
-                if utils.getDistance(sx, sy, tx, ty) == distance and utils.equalCellValue(mazemap, tx, ty, utils.Cell.Empty):
-                    utils.setCellValue(mazemap, tx, ty, utils.Cell.Target)
-                    break
-        else:
-            [sx, sy, tx, ty] = findSourceAndTarget(mazemap)
-
-        self.source = np.array([sx, sy])
-        self.target = np.array([tx, ty])
-        self.mazemap = np.array(mazemap)
-        return self.mazemap
-'''

@@ -70,7 +70,7 @@ def displayMap(mazemap):
                 if cell[k]:
                     output += str(k)
         output += '\n'
-    print output
+    print output,
 
 def remove(path):
     if os.path.exists(path):

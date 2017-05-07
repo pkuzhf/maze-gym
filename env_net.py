@@ -22,7 +22,6 @@ def get_env_actor():
     observation = Input(shape=(1, m, n, d), name='observation_input')
    
     x = Reshape((m, n, d))(observation)
-    #x = Conv2D(filters=curdim, kernel_size=(5, 5), padding='same', activation=actfn)(x)
 
     for i in range(3):
 
