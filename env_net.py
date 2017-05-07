@@ -16,7 +16,7 @@ def get_env_actor():
     d = utils.Cell.CellSize
 
     curdim = 32
-    use_bn = False
+    use_bn = True
     actfn = 'relu'
 
     observation = Input(shape=(1, m, n, d), name='observation_input')

@@ -31,7 +31,7 @@ class ENV_GYM(gym.Env):
         self.agent = None
         self.mask = None
         self.conflict_count = 0
-        self.reward_his = deque(maxlen=10000)
+        self.reward_his = deque(maxlen=1000)
         self.action_reward_his = [np.zeros(2) for _ in range(self.action_space.n)]
 
     def _reset(self):
@@ -39,7 +39,8 @@ class ENV_GYM(gym.Env):
         self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
         self.mask = self._getmask(self.mazemap)
-        self.env.policy.mask = self.mask
+        self.env.policy.set_mask(self.mask)
+        self.env.test_policy.set_mask(self.mask)
         return self.mazemap
 
     def _getmask(self, mazemap):
@@ -70,6 +71,8 @@ class ENV_GYM(gym.Env):
                 self.conflict_count += 1
                 conflict = True
                 done = True
+                a = self.env.forward(self.mazemap)
+                assert False
 
             if mask is not None:
                 mask[action] = 1
@@ -86,12 +89,17 @@ class ENV_GYM(gym.Env):
     def _step(self, action):
         assert self.action_space.contains(action)
 
-        done, conflict = self._act(self.mazemap, action, self.env.policy.mask)
+        done, conflict = self._act(self.mazemap, action, self.mask)
 
-        reward = 0
+        #if not self.isvalid_mazemap(self.mazemap):
+        #    done = True
+        #    reward = 0
+        #else:
         if done:
             mazemap = copy.deepcopy(self.mazemap)
             reward = self._get_reward_from_agent(mazemap)
+        else:
+            reward = 0
 
         self.gamestep += 1
         #if not conflict:
@@ -103,7 +111,7 @@ class ENV_GYM(gym.Env):
             #q_values = self.env.compute_q_values(state)
             #print q_values
             #os.system("clear")
-            print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward, 'his_avg_reward', np.mean(self.reward_his)]
+            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward, 'his_avg_reward', np.mean(self.reward_his))
             #print self.action_reward_his
             utils.displayMap(self.mazemap)
             self.reward_his.append(reward)
@@ -116,10 +124,7 @@ class ENV_GYM(gym.Env):
 
     def _get_reward_from_agent(self, mazemap):
 
-        #if not self.isvalid_mazemap(mazemap):
-        #    return -1
-        #else:
-        return utils.Wall2_count(mazemap) * 0.01
+        return utils.Wall2_count(mazemap) * 1
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -145,7 +150,7 @@ class ENV_GYM(gym.Env):
             policy = self.env.test_policy
 
         mask = self._getmask(mazemap)
-        policy.mask = mask
+        policy.set_mask(mask)
 
         while True:
             q_values = self.env.compute_q_values([mazemap])
