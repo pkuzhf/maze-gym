@@ -109,8 +109,12 @@ class ENV_GYM(gym.Env):
     def _get_reward_from_agent(self, mazemap):
 
         #return utils.Wall_count(mazemap) 
-        return self.random_path(mazemap)
-
+        #return self.random_path(mazemap)
+        return self.shortest_path(mazemap)
+        #return self.rightdown_path(mazemap)
+        #return self.rightdownupleft_path(mazemap)
+        #return self.rightdown_random_path(mazemap)
+        
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
 
@@ -218,10 +222,70 @@ class ENV_GYM(gym.Env):
             for i in range(len(utils.dirs)):
                 dx = sx + utils.dirs[i][0]
                 dy = sy + utils.dirs[i][1]
-                if utils.inMap(dx, dy):
+                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
                     valid_dirs.append(i)
             selected_dir = valid_dirs[np.random.randint(len(valid_dirs))]
             sx += utils.dirs[selected_dir][0]
             sy += utils.dirs[selected_dir][1]
             step += 1
         return step
+
+    def rightdown_path(self, mazemap):
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+        step = 0
+        max_step = 200
+        while (sx != tx or sy != ty) and step < max_step:
+            # right
+            dx = sx + utils.dirs[0][0]
+            dy = sy + utils.dirs[0][1]     
+            if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                sx = dx
+                sy = dy
+            else:
+                # down
+                dx = sx + utils.dirs[1][0]
+                dy = sy + utils.dirs[1][1]     
+                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                    sx = dx
+                    sy = dy
+            step += 1
+        return step
+
+    def rightdownupleft_path(self, mazemap):
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+        step = 0
+        max_step = 200
+        while (sx != tx or sy != ty) and step < max_step:
+            # right, down, up, left
+            for i in range(len(utils.dirs)):
+                dx = sx + utils.dirs[i][0]
+                dy = sy + utils.dirs[i][1]     
+                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                    sx = dx
+                    sy = dy
+                    break
+            step += 1
+        return step
+
+    def rightdown_random_path(self, mazemap):
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+        step = 0
+        max_step = 200
+        while (sx != tx or sy != ty) and step < max_step:
+            while True:
+                # right 0.4, down 0.4, up 0.1, left 0.1
+                selected_dir = np.argmax(np.random.multinomial(1, [0.4, 0.4, 0.1, 0.1]))
+                dx = sx + utils.dirs[selected_dir][0]
+                dy = sy + utils.dirs[selected_dir][1]     
+                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                    sx = dx
+                    sy = dy
+                    break
+            step += 1
+        return step        

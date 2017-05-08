@@ -3,8 +3,8 @@ class Game:
     MaxGameStep = 500
 
 class Map:
-    Height = 8
-    Width = 8
+    Height = 5
+    Width = 5
     WallDense = 0.
 
 class Generator:
