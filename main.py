@@ -28,10 +28,10 @@ env_net = get_env_net()
 env_memory = SequentialMemory(limit=50000, window_length=1)
 
 env_tau = get_tau(1)
-env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=0.1, half_eps_step=20000, eps_min=0.01)
-env_test_policy = MaskedBoltzmannQPolicy(tau=env_tau)
+env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=0.1, half_eps_step=20000, eps_min=0.1)
+env_test_policy = BoltzmannQPolicy(tau=env_tau)
 
-env = DQN(model=env_net, gamma=1.0, batch_size=32, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy)
+env = DQN(model=env_net, gamma=1.0, batch_size=32, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy,  nb_actions=env_gym.action_space.n, memory=env_memory)
 env.compile(Adam(lr=1e-3), metrics=['mae'])
 
 agent_env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=0.1)
@@ -45,7 +45,7 @@ env_tau = get_tau(0.02)
 agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=0)
 agent_test_policy = GreedyQPolicy()
 
-agent = DQN(model=agent_net, gamma=1.0, batch_size=32, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy)
+agent = DQN(model=agent_net, gamma=1.0, batch_size=32, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
 agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
 env_gym.env = env

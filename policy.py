@@ -6,12 +6,17 @@ class Policy(object):
     def __init__(self):
         self.minq = 1e20
         self.maxq = -1e20
+        self.cur_minq = 1e20
+        self.cur_maxq = 1e20
         self.mask = None
         self.eps_forB = 0
         self.eps_forC = 0
 
     def _set_agent(self, agent):
         self.agent = agent
+
+    def set_mask(self, mask):
+        self.mask = mask
 
     @property
     def metrics_names(self):
@@ -30,11 +35,15 @@ class Policy(object):
     def log_qvalue(self, q_values):
         if np.isnan(q_values).any():
             print(q_values)
-        if self.minq > np.min(q_values):
-            self.minq = np.min(q_values)
+
+        self.cur_minq = np.min(q_values)
+        self.cur_maxq = np.max(q_values)
+
+        if self.minq > self.cur_minq:
+            self.minq = self.cur_minq
             #print(q_values)
-        if self.maxq < np.max(q_values):
-            self.maxq = np.max(q_values)
+        if self.maxq < self.cur_maxq:
+            self.maxq = self.cur_maxq
             #print(q_values)
 
 
@@ -105,9 +114,6 @@ class MaskedRandomPolicy(Policy):
         config = super(MaskedRandomPolicy, self).get_config()
         return config
 
-    def set_mask(self, mask):
-        self.mask = mask
-
 
 class MaskedBoltzmannQPolicy(Policy):
 
@@ -138,9 +144,6 @@ class MaskedBoltzmannQPolicy(Policy):
         config = super(MaskedBoltzmannQPolicy, self).get_config()
         return config
 
-    def set_mask(self, mask):
-        self.mask = mask
-
 
 class MaskedGreedyQPolicy(Policy):
 
@@ -155,9 +158,6 @@ class MaskedGreedyQPolicy(Policy):
             q_values -= self.mask * 1e20
         action = np.argmax(q_values)
         return action
-
-    def set_mask(self, mask):
-        self.mask = mask
 
 
 class EpsABPolicy(Policy):

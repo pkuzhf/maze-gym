@@ -31,6 +31,7 @@ class ENV_GYM(gym.Env):
         self.agent = None
         self.mask = None
         self.conflict_count = 0
+        self.max_reward = -1e20
         self.reward_his = deque(maxlen=1000)
         self.action_reward_his = [np.zeros(2) for _ in range(self.action_space.n)]
 
@@ -71,8 +72,6 @@ class ENV_GYM(gym.Env):
                 self.conflict_count += 1
                 conflict = True
                 done = True
-                a = self.env.forward(self.mazemap)
-                assert False
 
             if mask is not None:
                 mask[action] = 1
@@ -100,24 +99,16 @@ class ENV_GYM(gym.Env):
         #    utils.displayMap(self.mazemap)
             #utils.displayMap(mazemap)
         if done:
-            #state = self.env.memory.get_recent_state(self.mazemap)
-            #q_values = self.env.compute_q_values(state)
-            #print q_values
-            #os.system("clear")
-            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', '%0.2f' % reward, 'his_avg_reward', '%0.2f' % np.mean(self.reward_his), 'minq', '%0.2f' % self.env.policy.minq, 'maxq', '%0.2f' % self.env.policy.maxq, 'epsB', self.env.policy.eps_forB, 'epsC', self.env.policy.eps_forC)
-            #print self.action_reward_his
+            self.max_reward = max(self.max_reward, reward)
+            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'his_avg_reward', '%0.2f' % np.mean(self.reward_his), 'minq', '%0.2f / %0.2f' % (self.env.policy.cur_minq, self.env.policy.minq), 'maxq', '%0.2f / %0.2f' % (self.env.policy.cur_maxq, self.env.policy.maxq), 'epsB', '%0.2f' % self.env.policy.eps_forB, 'epsC', '%0.2f' % self.env.policy.eps_forC)
             utils.displayMap(self.mazemap)
             self.reward_his.append(reward)
-
-        #count = self.action_reward_his[action][0]
-        #self.action_reward_his[action][0] += 1
-        #self.action_reward_his[action][1] = (self.action_reward_his[action][1] * count + reward) / (count + 1)
 
         return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
 
-        return utils.Wall_count(mazemap) * 1
+        return utils.Wall_count(mazemap) #self.shortest_path(mazemap) +
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -183,3 +174,34 @@ class ENV_GYM(gym.Env):
         #print 'Invalid Map'
         #utils.displayMap(mazemap)
         return False
+
+    def shortest_path(self, mazemap):
+
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+
+        from collections import deque
+        queue = deque()
+        queue.append([sx, sy])
+        shortest_path = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
+        shortest_path[sx][sy] = 1
+
+        #utils.displayMap(mazemap)
+
+        while len(queue):
+            [cx, cy] = queue.popleft()
+            cur_path_len = shortest_path[cx][cy]
+
+            for k in range(len(utils.dirs)):
+                [nx, ny] = [cx, cy] + utils.dirs[k]
+                if not utils.inMap(nx, ny):
+                    continue
+                if utils.equalCellValue(mazemap, nx, ny, utils.Cell.Empty) or utils.equalCellValue(mazemap, nx, ny, utils.Cell.Target):
+                    if shortest_path[nx][ny] == 0 or shortest_path[nx][ny] > cur_path_len + 1:
+                        queue.append([nx, ny])
+                        shortest_path[nx][ny] = cur_path_len + 1
+
+        #print('shortest_path:' + str(shortest_path[tx][ty]))
+
+        return shortest_path[tx][ty]-config.Map.Height-config.Map.Width+1
