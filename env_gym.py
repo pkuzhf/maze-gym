@@ -108,7 +108,8 @@ class ENV_GYM(gym.Env):
 
     def _get_reward_from_agent(self, mazemap):
 
-        return utils.Wall_count(mazemap) #self.shortest_path(mazemap) +
+        #return utils.Wall_count(mazemap) 
+        return self.random_path(mazemap)
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -204,4 +205,23 @@ class ENV_GYM(gym.Env):
 
         #print('shortest_path:' + str(shortest_path[tx][ty]))
 
-        return shortest_path[tx][ty]-config.Map.Height-config.Map.Width+1
+        return shortest_path[tx][ty]
+
+    def random_path(self, mazemap):
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+        step = 0
+        max_step = 200
+        while (sx != tx or sy != ty) and step < max_step:
+            valid_dirs = []
+            for i in range(len(utils.dirs)):
+                dx = sx + utils.dirs[i][0]
+                dy = sy + utils.dirs[i][1]
+                if utils.inMap(dx, dy):
+                    valid_dirs.append(i)
+            selected_dir = valid_dirs[np.random.randint(len(valid_dirs))]
+            sx += utils.dirs[selected_dir][0]
+            sy += utils.dirs[selected_dir][1]
+            step += 1
+        return step
