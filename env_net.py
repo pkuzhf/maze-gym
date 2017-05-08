@@ -3,6 +3,7 @@ from keras import backend as K
 from keras.models import Sequential, Input, Model
 from keras.layers import Dense, Dropout, Flatten, Reshape, Activation, merge
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, GlobalAveragePooling2D
+from keras.activations import relu
 
 def get_env_net():
 
@@ -44,7 +45,7 @@ def get_env_actor():
 
     env_actor = Model(input=observation, output=actions)
 
-    print 'env actor:'
+    print('env model:')
     print(env_actor.summary())
     return env_actor
 

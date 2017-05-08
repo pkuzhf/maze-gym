@@ -77,29 +77,22 @@ class ENV_GYM(gym.Env):
             if mask is not None:
                 mask[action] = 1
 
-        if done:
-            for i in range(config.Map.Height):
-                for j in range(config.Map.Width):
-                    if utils.equalCellValue(mazemap, i, j, utils.Cell.Wall):
-                        utils.setCellValue(mazemap, i, j, utils.Cell.Wall2)
-
         return done, conflict
-
 
     def _step(self, action):
         assert self.action_space.contains(action)
 
         done, conflict = self._act(self.mazemap, action, self.mask)
 
-        #if not self.isvalid_mazemap(self.mazemap):
-        #    done = True
-        #    reward = 0
-        #else:
-        if done:
-            mazemap = copy.deepcopy(self.mazemap)
-            reward = self._get_reward_from_agent(mazemap)
-        else:
+        if not self.isvalid_mazemap(self.mazemap):
+            done = True
             reward = 0
+        else:
+            if done:
+                mazemap = copy.deepcopy(self.mazemap)
+                reward = self._get_reward_from_agent(mazemap)
+            else:
+                reward = 0
 
         self.gamestep += 1
         #if not conflict:
@@ -111,7 +104,7 @@ class ENV_GYM(gym.Env):
             #q_values = self.env.compute_q_values(state)
             #print q_values
             #os.system("clear")
-            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward, 'his_avg_reward', np.mean(self.reward_his))
+            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', '%0.2f' % reward, 'his_avg_reward', '%0.2f' % np.mean(self.reward_his), 'minq', '%0.2f' % self.env.policy.minq, 'maxq', '%0.2f' % self.env.policy.maxq)
             #print self.action_reward_his
             utils.displayMap(self.mazemap)
             self.reward_his.append(reward)
@@ -124,7 +117,7 @@ class ENV_GYM(gym.Env):
 
     def _get_reward_from_agent(self, mazemap):
 
-        return utils.Wall2_count(mazemap) * 1
+        return utils.Wall_count(mazemap) * 1
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()

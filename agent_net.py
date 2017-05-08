@@ -13,7 +13,7 @@ def get_agent_net():
     d = utils.Cell.CellSize
 
     curdim = 32
-    use_bn = False
+    use_bn = True
     actfn = 'relu'
 
     observation = Input(shape=(1, m, n, d), name='observation_input')
@@ -40,7 +40,7 @@ def get_agent_net():
 
     agent_model = Model(input=observation, output=actions)
 
-    print 'agent model:'
+    print('agent model:')
     print(agent_model.summary())
     return agent_model
 
