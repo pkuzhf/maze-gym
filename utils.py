@@ -84,3 +84,5 @@ def removedirs(path):
     if os.path.exists(path):
         shutil.rmtree(path)
 
+def get_tau(reward_for_prob_one_of_ten):
+    return reward_for_prob_one_of_ten / -np.log(0.1)

@@ -7,6 +7,8 @@ class Policy(object):
         self.minq = 1e20
         self.maxq = -1e20
         self.mask = None
+        self.eps_forB = 0
+        self.eps_forC = 0
 
     def _set_agent(self, agent):
         self.agent = agent
@@ -160,12 +162,16 @@ class MaskedGreedyQPolicy(Policy):
 
 class EpsABPolicy(Policy):
 
-    def __init__(self, policyA, policyB, eps_forB, eps_decay_rate_each_step=1.0):
+    def __init__(self, policyA, policyB, eps_forB, half_eps_step=0, eps_min=0):
         super(EpsABPolicy, self).__init__()
         self.policyA = policyA
         self.policyB = policyB
         self.eps_forB = eps_forB
-        self.eps_decay_rate_each_step = eps_decay_rate_each_step
+        self.eps_min=eps_min
+        if half_eps_step==0:
+            self.eps_decay_rate_each_step = 1.0
+        else:
+            self.eps_decay_rate_each_step = np.power(0.5, 1.0/half_eps_step)
 
     def select_action(self, q_values):
         self.log_qvalue(q_values)
@@ -175,6 +181,7 @@ class EpsABPolicy(Policy):
         else:
             action = self.policyA.select_action(q_values)
         self.eps_forB *= self.eps_decay_rate_each_step
+        self.eps_forB = max(self.eps_min, self.eps_forB)
         return action
 
     def get_config(self):
@@ -192,14 +199,18 @@ class EpsABPolicy(Policy):
 
 
 class EpsABCPolicy(Policy):
-    def __init__(self, policyA, policyB, policyC, eps_forB, eps_forC, eps_decay_rate_each_step=1.0):
+    def __init__(self, policyA, policyB, policyC, eps_forB, eps_forC, half_eps_step=0, eps_min=0):
         super(EpsABCPolicy, self).__init__()
         self.policyA = policyA
         self.policyB = policyB
         self.policyC = policyC
         self.eps_forB = eps_forB
         self.eps_forC = eps_forC
-        self.eps_decay_rate_each_step = eps_decay_rate_each_step
+        self.eps_min = eps_min
+        if half_eps_step == 0:
+            self.eps_decay_rate_each_step = 1.0
+        else:
+            self.eps_decay_rate_each_step = np.power(0.5, 1.0 / half_eps_step)
 
     def select_action(self, q_values):
         self.log_qvalue(q_values)
@@ -213,6 +224,8 @@ class EpsABCPolicy(Policy):
             action = self.policyA.select_action(q_values)
         self.eps_forB *= self.eps_decay_rate_each_step
         self.eps_forC *= self.eps_decay_rate_each_step
+        self.eps_forB = max(self.eps_min, self.eps_forB)
+        self.eps_forC = max(self.eps_min, self.eps_forC)
         return action
 
     def get_config(self):

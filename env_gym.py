@@ -104,7 +104,7 @@ class ENV_GYM(gym.Env):
             #q_values = self.env.compute_q_values(state)
             #print q_values
             #os.system("clear")
-            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', '%0.2f' % reward, 'his_avg_reward', '%0.2f' % np.mean(self.reward_his), 'minq', '%0.2f' % self.env.policy.minq, 'maxq', '%0.2f' % self.env.policy.maxq)
+            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', '%0.2f' % reward, 'his_avg_reward', '%0.2f' % np.mean(self.reward_his), 'minq', '%0.2f' % self.env.policy.minq, 'maxq', '%0.2f' % self.env.policy.maxq, 'epsB', self.env.policy.eps_forB, 'epsC', self.env.policy.eps_forC)
             #print self.action_reward_his
             utils.displayMap(self.mazemap)
             self.reward_his.append(reward)

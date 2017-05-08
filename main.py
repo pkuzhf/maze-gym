@@ -27,32 +27,33 @@ env_gym.seed(config.Game.Seed)
 env_net = get_env_net()
 env_memory = SequentialMemory(limit=50000, window_length=1)
 
-#env_policy = EpsABCPolicy(policyA=MaskedGreedyQPolicy(), policyB=MaskedBoltzmannQPolicy(), policyC=MaskedRandomPolicy(), eps_forB=0.1, eps_forC=0.01)
-env_policy = EpsABPolicy(policyA=MaskedGreedyQPolicy(), policyB=MaskedRandomPolicy(), eps_forB=0.1)
-env_test_policy = MaskedBoltzmannQPolicy()
+env_tau = get_tau(1)
+env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=0.1, half_eps_step=20000, eps_min=0.01)
+env_test_policy = MaskedBoltzmannQPolicy(tau=env_tau)
 
-env = DQN(model=env_net, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=100, target_model_update=1e-3, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy)
+env = DQN(model=env_net, gamma=1.0, batch_size=32, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy)
 env.compile(Adam(lr=1e-3), metrics=['mae'])
 
-agent_env_policy = EpsABPolicy(policyA=MaskedGreedyQPolicy(), policyB=MaskedRandomPolicy(),eps_forB=0.1)
+agent_env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=0.1)
 agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, env_test_policy)
 agent_gym.seed(config.Game.Seed)
 
 agent_net = get_agent_net()
 agent_memory = SequentialMemory(limit=50000, window_length=1)
 
-agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1)
+env_tau = get_tau(0.02)
+agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=0)
 agent_test_policy = GreedyQPolicy()
 
-agent = DQN(model=agent_net, gamma=1.0, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=100, target_model_update=1e-3, enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy)
+agent = DQN(model=agent_net, gamma=1.0, batch_size=32, nb_actions=agent_gym.action_space.n, memory=agent_memory, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy)
 agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
 env_gym.env = env
 env_gym.agent = agent
 
 
-nround = 2000
-result_folder = 'result/test/' #datetime.datetime.now().isoformat()
+nround = 1000
+result_folder = '../maze_result/' #datetime.datetime.now().isoformat()
 makedirs(result_folder)
 
 for round in range(nround):
