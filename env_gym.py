@@ -30,9 +30,10 @@ class ENV_GYM(gym.Env):
         self.env = None
         self.agent = None
         self.mask = None
+        self.invalid_count = 0
         self.conflict_count = 0
         self.max_reward = -1e20
-        self.reward_his = deque(maxlen=1000)
+        self.reward_his = deque(maxlen=10000)
         self.action_reward_his = [np.zeros(2) for _ in range(self.action_space.n)]
 
     def _reset(self):
@@ -56,68 +57,80 @@ class ENV_GYM(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+    def _update_mask(self, action, mask, mazemap, mask_invalid=False):
+
+        mask[action] = 1
+
+        if mask_invalid:
+            for i in range(0, config.Map.Height):
+                for j in range(0, config.Map.Width):
+                    if utils.equalCellValue(mazemap, i, j, utils.Cell.Empty):
+                        utils.setCellValue(mazemap, i, j, utils.Cell.Wall)
+                        if not self.isvalid_mazemap(mazemap):
+                            mask[i*config.Map.Width+j] = 1
+                        utils.setCellValue(mazemap, i, j, utils.Cell.Empty)
+
     def _act(self, mazemap, action, mask):
 
         done = (action == config.Map.Height * config.Map.Width)
 
+        invalid = False
         conflict = False
 
         if not done:
 
-            [x, y] = [action / config.Map.Width, action % config.Map.Width]
+            x, y = action / config.Map.Width, action % config.Map.Width
 
             if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
                 utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
+                if not self.isvalid_mazemap(self.mazemap):
+                    utils.setCellValue(mazemap, x, y, utils.Cell.Empty)
+                    self.invalid_count += 1
+                    invalid = True
+                    done = True
             else:
                 self.conflict_count += 1
                 conflict = True
                 done = True
 
             if mask is not None:
-                mask[action] = 1
+                self._update_mask(action, mask, mazemap)
 
-        return done, conflict
+        return done, conflict, invalid
 
     def _step(self, action):
         assert self.action_space.contains(action)
 
-        done, conflict = self._act(self.mazemap, action, self.mask)
+        done, conflict, invalid = self._act(self.mazemap, action, self.mask)
 
-        if not self.isvalid_mazemap(self.mazemap):
-            done = True
-            reward = 0
+        if done:
+            mazemap = copy.deepcopy(self.mazemap)
+            reward = self._get_reward_from_agent(mazemap)
         else:
-            if done:
-                mazemap = copy.deepcopy(self.mazemap)
-                reward = self._get_reward_from_agent(mazemap)
-            else:
-                reward = 0
+            reward = 0
 
         self.gamestep += 1
-        #if not conflict:
-        #    print ['gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', reward]
-        #    utils.displayMap(self.mazemap)
-            #utils.displayMap(mazemap)
         if done:
-            self.max_reward = max(self.max_reward, reward)
-            print('gamestep', self.gamestep, 'confilict', self.conflict_count, 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'his_avg_reward', '%0.2f' % np.mean(self.reward_his), 'minq', '%0.2f / %0.2f' % (self.env.policy.cur_minq, self.env.policy.minq), 'maxq', '%0.2f / %0.2f' % (self.env.policy.cur_maxq, self.env.policy.maxq), 'epsB', '%0.2f' % self.env.policy.eps_forB, 'epsC', '%0.2f' % self.env.policy.eps_forC)
-            utils.displayMap(self.mazemap)
             self.reward_his.append(reward)
+            self.max_reward = max(self.max_reward, reward)
+            print('gamestep', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
+                  'minq', '%0.2f / %0.2f' % (self.env.policy.cur_minq, self.env.policy.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.env.policy.cur_maxq-reward, self.env.policy.cur_maxq, self.env.policy.maxq),
+                  'eps', '%0.2f / %0.2f)' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
+            utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
 
-        #return utils.Wall_count(mazemap) 
+        return utils.Wall_count(mazemap)
         #return self.random_path(mazemap)
         #return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
         #return self.rightdown_random_path(mazemap)
-        return self.dfs_path(mazemap)
+        #return self.dfs_path(mazemap)
 
-        
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
 
@@ -147,7 +160,7 @@ class ENV_GYM(gym.Env):
         while True:
             q_values = self.env.compute_q_values([mazemap])
             action = policy.select_action(q_values=q_values)
-            done, conflict = self._act(mazemap, action, policy.mask)
+            done, conflict, invalid = self._act(mazemap, action, policy.mask)
             if done:
                 break
 
@@ -157,8 +170,6 @@ class ENV_GYM(gym.Env):
 
         [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
-            #print 'Invalid Map'
-            #utils.displayMap(mazemap)
             return False
 
         from collections import deque
