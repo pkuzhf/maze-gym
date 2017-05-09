@@ -36,15 +36,17 @@ class Policy(object):
         if np.isnan(q_values).any():
             print(q_values)
 
+        if self.mask is not None:
+            q_values = q_values * (1-self.mask)
+
         self.cur_minq = np.min(q_values)
         self.cur_maxq = np.max(q_values)
 
         if self.minq > self.cur_minq:
             self.minq = self.cur_minq
-            #print(q_values)
+
         if self.maxq < self.cur_maxq:
             self.maxq = self.cur_maxq
-            #print(q_values)
 
 
 class RandomPolicy(Policy):

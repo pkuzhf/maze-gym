@@ -2,53 +2,45 @@ import config
 from utils import *
 import datetime
 import numpy as np
+from env_net import *
 from env_gym import ENV_GYM
+from agent_net import *
 from agent_gym import ADVERSARIAL_AGENT_GYM
-from keras.optimizers import Adam, SGD
-from rl.core import Processor
+from keras.optimizers import *
 from rl.agents.dqn import DQNAgent as DQN
-from rl.agents.ddpg import DDPGAgent as PG
-from rl.random import OrnsteinUhlenbeckProcess
 from policy import *
 from rl.memory import SequentialMemory
-from agent_net import get_agent_net
-from env_net import *
 
 np.random.seed(config.Game.Seed)
 
 env_gym = ENV_GYM()
 env_gym.seed(config.Game.Seed)
 
-#env_actor = get_env_actor()
-#env_critic, action_input = get_env_critic()
-#random_process = OrnsteinUhlenbeckProcess(theta=.15, mu=0, sigma=.3, size=env_gym.action_space.n)
-#env = PG(actor=env_actor, critic=env_critic, critic_action_input=action_input, gamma=1.0, nb_actions=env_gym.action_space.n, memory=env_memory, nb_steps_warmup_actor=50, nb_steps_warmup_critic=50, target_model_update=1e-3, random_process=random_process)
-
 env_net = get_env_net()
 env_memory = SequentialMemory(limit=50000, window_length=1)
 
-env_tau = get_tau(2)
-env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=env_tau), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=20000, eps_min=0.1)
+env_s = 3 # the significant reward scale
+env_tau = get_tau(env_s)
+env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=env_tau), policyB=RandomPolicy(), eps_forB=0.5, half_eps_step=1000, eps_min=0.1)
 env_test_policy = BoltzmannQPolicy(tau=env_tau)
 
-env = DQN(model=env_net, gamma=1.0, batch_size=32, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, 
-    policy=env_policy, test_policy=env_test_policy,  nb_actions=env_gym.action_space.n, memory=env_memory)
-env.compile(Adam(lr=1e-3), metrics=['mae'])
+env = DQN(model=env_net, gamma=1.0, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy,  nb_actions=env_gym.action_space.n, memory=env_memory, custom_model_objects={'Scaleshift': Scaleshift})
+env.compile(Adam(lr=1e-3))
 
-#agent_env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=env_tau), policyB=RandomPolicy(), eps_forB=0.1)
-agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, env_test_policy)
+agent_env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=env_tau), policyB=RandomPolicy(), eps_forB=0.1)
+agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, agent_env_policy)
 agent_gym.seed(config.Game.Seed)
 
 agent_net = get_agent_net()
 agent_memory = SequentialMemory(limit=50000, window_length=1)
 
-env_tau = get_tau(1)
+agent_s = 0.02 # the significant reward scale
+agent_tau = get_tau(agent_s)
 agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=0)
 agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=0)
 
-agent = DQN(model=agent_net, gamma=1.0, batch_size=32, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, 
-    policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
-agent.compile(Adam(lr=1e-3), metrics=['mae'])
+agent = DQN(model=agent_net, gamma=1.0, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory, custom_model_objects={'Scaleshift': Scaleshift})
+agent.compile(Adam(lr=1e-3))
 
 env_gym.env = env
 env_gym.agent = agent

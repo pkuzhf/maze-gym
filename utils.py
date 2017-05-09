@@ -1,6 +1,7 @@
 import numpy as np
 import config
 import os
+from keras.layers import Layer
 
 # right, down, up, left
 dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
