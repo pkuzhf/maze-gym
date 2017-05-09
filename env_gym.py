@@ -110,7 +110,8 @@ class ENV_GYM(gym.Env):
 
         #return utils.Wall_count(mazemap) 
         #return self.random_path(mazemap)
-        return self.shortest_path(mazemap)
+        #return self.shortest_path(mazemap)
+        return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
         #return self.rightdown_random_path(mazemap)
@@ -210,6 +211,63 @@ class ENV_GYM(gym.Env):
         #print('shortest_path:' + str(shortest_path[tx][ty]))
 
         return shortest_path[tx][ty]
+
+    def shortest_random_path(self, mazemap):
+
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+
+        from collections import deque
+        queue = deque()
+        queue.append([tx, ty])
+        shortest_path = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
+        shortest_path[tx][ty] = 0
+
+        #utils.displayMap(mazemap)
+
+        while len(queue):
+            [cx, cy] = queue.popleft()
+            cur_path_len = shortest_path[cx][cy]
+
+            for k in range(len(utils.dirs)):
+                [nx, ny] = [cx, cy] + utils.dirs[k]
+                if not utils.inMap(nx, ny):
+                    continue
+                if utils.equalCellValue(mazemap, nx, ny, utils.Cell.Empty) or utils.equalCellValue(mazemap, nx, ny, utils.Cell.Source):
+                    if shortest_path[nx][ny] == 0 or shortest_path[nx][ny] > cur_path_len + 1:
+                        queue.append([nx, ny])
+                        shortest_path[nx][ny] = cur_path_len + 1
+
+        step = 0
+        max_step = 200
+        optimal_dir_prob = 0.8
+        invalid_distance = config.Map.Height * config.Map.Width
+        while (sx != tx or sy != ty) and step < max_step:
+            distance_dirs = []
+            valid_dir_n = 0
+            for i in range(len(utils.dirs)):
+                dx = sx + utils.dirs[i][0]
+                dy = sy + utils.dirs[i][1]
+                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                    distance_dirs.append(shortest_path[dx][dy])
+                    valid_dir_n += 1
+                else:
+                    distance_dirs.append(invalid_distance)
+            prob_dirs = []
+            for i in range(len(utils.dirs)):
+                if i == np.argmin(distance_dirs):
+                    prob_dirs.append(optimal_dir_prob)
+                elif distance_dirs[i] != invalid_distance:
+                    prob_dirs.append((1 - optimal_dir_prob) / (valid_dir_n - 1))
+                else:
+                    prob_dirs.append(0.)
+
+            selected_dir = np.argmax(np.random.multinomial(1, prob_dirs))
+            sx += utils.dirs[selected_dir][0]
+            sy += utils.dirs[selected_dir][1]
+            step += 1
+        return step
 
     def random_path(self, mazemap):
         [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
