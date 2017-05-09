@@ -38,6 +38,7 @@ class ENV_GYM(gym.Env):
 
     def _reset(self):
         self.gamestep = 0
+        self.invalid_count = 0
         self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
         self.mask = self._getmask(self.mazemap)
@@ -57,7 +58,7 @@ class ENV_GYM(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _update_mask(self, action, mask, mazemap, mask_invalid=False):
+    def _update_mask(self, action, mask, mazemap, mask_invalid=True):
 
         mask[action] = 1
 

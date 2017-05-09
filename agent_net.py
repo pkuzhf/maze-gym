@@ -11,7 +11,7 @@ def get_agent_net():
     m = config.Map.Width
     d = utils.Cell.CellSize
 
-    use_bn = True
+    use_bn = False
 
     observation = Input(shape=(1, m, n, d), name='observation_input')
     x = Reshape((m, n, d))(observation)
@@ -29,7 +29,7 @@ def get_agent_net():
     #x = Dense(256, activation=None)(x)
     actions = Dense(4, activation=None)(x)
 
-    agent_model = Model(input=observation, output=actions)
+    agent_model = Model(inputs=observation, outputs=actions)
 
     print('agent model:')
     print(agent_model.summary())
