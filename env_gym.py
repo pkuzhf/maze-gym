@@ -111,10 +111,12 @@ class ENV_GYM(gym.Env):
         #return utils.Wall_count(mazemap) 
         #return self.random_path(mazemap)
         #return self.shortest_path(mazemap)
-        return self.shortest_random_path(mazemap)
+        #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
         #return self.rightdown_random_path(mazemap)
+        return self.dfs_path(mazemap)
+
         
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.reset()
@@ -239,6 +241,7 @@ class ENV_GYM(gym.Env):
                         queue.append([nx, ny])
                         shortest_path[nx][ny] = cur_path_len + 1
 
+        # go optimal direction in probability $optimal_dir_prob
         step = 0
         max_step = 200
         optimal_dir_prob = 0.8
@@ -318,7 +321,7 @@ class ENV_GYM(gym.Env):
         step = 0
         max_step = 200
         while (sx != tx or sy != ty) and step < max_step:
-            # right, down, up, left
+            # deterministic order: right, down, up, left
             for i in range(len(utils.dirs)):
                 dx = sx + utils.dirs[i][0]
                 dy = sy + utils.dirs[i][1]     
@@ -347,3 +350,34 @@ class ENV_GYM(gym.Env):
                     break
             step += 1
         return step        
+
+    def dfs_path(self, mazemap):
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+        
+        # explore in a dfs way until find target
+        stack = [[sx, sy]]
+        step = 0
+        visited = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
+        visited[sx][sy] = 1
+
+        while len(stack) > 0:
+            [x, y] = stack[-1]
+            if x == tx and y == ty:
+                break
+            expended = False
+            for i in range(len(utils.dirs)):
+                dx = x + utils.dirs[i][0]
+                dy = y + utils.dirs[i][1]
+                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall) and visited[dx][dy] == 0:
+                    expended = True
+                    visited[dx][dy] = 1
+                    stack.append([dx, dy])
+                    step += 1
+                    break
+            if not expended:
+                stack.pop()
+                step += 1
+
+        return step
