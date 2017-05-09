@@ -115,7 +115,7 @@ class ENV_GYM(gym.Env):
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
         #return self.rightdown_random_path(mazemap)
-        return self.dfs_path(mazemap)
+        #return self.dfs_path(mazemap)
 
         
         agent_gym = AGENT_GYM(mazemap)
@@ -125,7 +125,7 @@ class ENV_GYM(gym.Env):
         reward_episode = 0
         while gamestep < config.Game.MaxGameStep:
             gamestep += 1
-            action = self.agent.forward(mazemap)
+            action = self.agent.forward(agent_gym.mazemap)
             obs, reward, done, info = agent_gym.step(action)
             reward_episode += reward
             if done:
