@@ -45,7 +45,6 @@ agent.compile(Adam(lr=1e-3))
 env_gym.env = env
 env_gym.agent = agent
 
-
 nround = 1000
 result_folder = '../maze_result/' #datetime.datetime.now().isoformat()
 makedirs(result_folder)
@@ -53,9 +52,9 @@ makedirs(result_folder)
 for round in range(nround):
     print('\n\nround ' + str(round) + '/' + str(nround))
 
-    print '\n\nagent '
-    agent.fit(agent_gym, nb_steps=5000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
-    agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+    #print('\n\nagent ')
+    #agent.fit(agent_gym, nb_steps=2000 if round<5 else 10000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+    #agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
 
     print('\n\nenv ')
     env.fit(env_gym, nb_steps=500, visualize=False, verbose=2)
@@ -63,4 +62,3 @@ for round in range(nround):
 
     #agent.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
     #env.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)
-

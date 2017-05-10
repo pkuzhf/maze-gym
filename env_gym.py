@@ -84,7 +84,7 @@ class ENV_GYM(gym.Env):
 
             if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
                 utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
-                if not self.isvalid_mazemap(self.mazemap):
+                if not self.isvalid_mazemap(mazemap):
                     utils.setCellValue(mazemap, x, y, utils.Cell.Empty)
                     self.invalid_count += 1
                     invalid = True
