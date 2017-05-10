@@ -87,3 +87,9 @@ def removedirs(path):
 
 def get_tau(reward_for_prob_one_of_ten):
     return reward_for_prob_one_of_ten / -np.log(0.1)
+
+def get_session():
+    import tensorflow as tf
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+    config.gpu_options.allow_growth = True
+    return tf.Session(config=config)
