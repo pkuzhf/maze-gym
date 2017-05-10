@@ -3,11 +3,12 @@ from rl.util import *
 
 class Policy(object):
 
+    minq = 1e20
+    maxq = -1e20
+    cur_minq = 1e20
+    cur_maxq = 1e20
+
     def __init__(self):
-        self.minq = 1e20
-        self.maxq = -1e20
-        self.cur_minq = 1e20
-        self.cur_maxq = 1e20
         self.mask = None
         self.eps_forB = 0
         self.eps_forC = 0
@@ -31,7 +32,7 @@ class Policy(object):
 
     def get_config(self):
         return {}
-    
+
     def log_qvalue(self, q_values):
         if np.isnan(q_values).any():
             print(q_values)
@@ -39,14 +40,14 @@ class Policy(object):
         if self.mask is not None:
             q_values = q_values * (1-self.mask)
 
-        self.cur_minq = np.min(q_values)
-        self.cur_maxq = np.max(q_values)
+        Policy.cur_minq = np.min(q_values)
+        Policy.cur_maxq = np.max(q_values)
 
-        if self.minq > self.cur_minq:
-            self.minq = self.cur_minq
+        if Policy.minq > Policy.cur_minq:
+            Policy.minq = Policy.cur_minq
 
-        if self.maxq < self.cur_maxq:
-            self.maxq = self.cur_maxq
+        if Policy.maxq < Policy.cur_maxq:
+            Policy.maxq = Policy.cur_maxq
 
 
 class RandomPolicy(Policy):

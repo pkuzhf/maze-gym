@@ -13,7 +13,7 @@ def get_env_net():
     m = config.Map.Width
     d = utils.Cell.CellSize
 
-    use_bn = False
+    use_bn = True
 
     observation = Input(shape=(1, m, n, d), name='observation_input')
     x = Reshape((m, n, d))(observation)
@@ -23,8 +23,6 @@ def get_env_net():
         x = Conv2D(filters=curdim, kernel_size=(3, 3), padding='same')(x)
         if use_bn:
             x = BatchNormalization()(x)
-        #else:
-        #    x = Scaleshift()(x)
         x = Activation(activation='relu')(x)
 
         x = Conv2D(filters=curdim, kernel_size=(1, 1), padding='same')(x)
@@ -33,7 +31,7 @@ def get_env_net():
         x = Activation(activation='relu')(x)
 
     x = Flatten()(x)
-    #x = Dropout(0.5)(x)
+    x = Dropout(0.5)(x)
     #x = Dense(256, activation=None)(x)
     actions = Dense(m*n+1)(x)
 
