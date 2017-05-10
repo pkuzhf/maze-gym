@@ -1,10 +1,10 @@
 class Game:
     Seed = 123456
-    MaxGameStep = 500
+    MaxGameStep = 200
 
 class Map:
-    Height = 4
-    Width = 4
+    Height = 8
+    Width = 8
     WallDense = 0.
 
 class Generator:

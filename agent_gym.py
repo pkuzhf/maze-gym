@@ -40,14 +40,14 @@ class AGENT_GYM(gym.Env):
     def _step(self, action):
 
         done = False
-        reward = -0.01
+        reward = -1
 
         new_source = self.source + utils.dirs[action]
 
         if utils.inMap(new_source[0], new_source[1]):
 
             if utils.equalCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Target):
-                reward = 1
+                #reward = 1
                 done = True
                 utils.setCellValue(self.mazemap, self.source[0], self.source[1], utils.Cell.Empty)
                 utils.setCellValue(self.mazemap, new_source[0], new_source[1], utils.Cell.Source)
