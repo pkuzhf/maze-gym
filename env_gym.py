@@ -123,7 +123,7 @@ class ENV_GYM(gym.Env):
 
     def _get_reward_from_agent(self, mazemap):
 
-        return utils.Wall_count(mazemap)
+        #return utils.Wall_count(mazemap)
         #return self.random_path(mazemap)
         #return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)

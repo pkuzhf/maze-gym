@@ -11,22 +11,37 @@ def get_agent_net():
     m = config.Map.Width
     d = utils.Cell.CellSize
 
-    use_bn = False
+    use_bn = True
 
     observation = Input(shape=(1, m, n, d), name='observation_input')
     x = Reshape((m, n, d))(observation)
 
-    list = [32, 32, 32, 32, 32]
+    list = [32, 32, 32]
     for curdim in list:
         x = Conv2D(filters=curdim, kernel_size=(3, 3), padding='same')(x)
         if use_bn:
             x = BatchNormalization()(x)
-        #x = PReLU(Constant(0.5))(x)
         x = Activation(activation='relu')(x)
 
+        # x = Conv2D(filters=curdim, kernel_size=(1, 1), padding='same')(x)
+        # if use_bn:
+        #    x = BatchNormalization()(x)
+        # x = Activation(activation='relu')(x)
+
+    # x = Conv2D(filters=1, kernel_size=(1, 1), padding='same')(x)
+    # if use_bn:
+    #    x = BatchNormalization()(x)
+    # x = Activation(activation='relu')(x)
+
     x = Flatten()(x)
-    #x = Dropout(0.5)(x)
-    #x = Dense(256, activation=None)(x)
+    # x = Dropout(0.5)(x)
+
+    # x = Dense(256)(x)
+    # if use_bn:
+    #    x = BatchNormalization()(x)
+    # x = Activation(activation='relu')(x)
+    # x = Dropout(0.5)(x)
+
     actions = Dense(4, activation=None)(x)
 
     agent_model = Model(inputs=observation, outputs=actions)

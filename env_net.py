@@ -5,7 +5,6 @@ from keras.layers import Dense, Dropout, Flatten, Reshape, LeakyReLU, PReLU, mer
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, GlobalAveragePooling2D
 from keras.activations import relu
 from keras.initializers import *
-from scaleshift import Scaleshift
 
 def get_env_net():
 
@@ -30,12 +29,20 @@ def get_env_net():
         #    x = BatchNormalization()(x)
         #x = Activation(activation='relu')(x)
 
+    #x = Conv2D(filters=1, kernel_size=(1, 1), padding='same')(x)
+    #if use_bn:
+    #    x = BatchNormalization()(x)
+    #x = Activation(activation='relu')(x)
+
     x = Flatten()(x)
     #x = Dropout(0.5)(x)
+
     #x = Dense(256)(x)
     #if use_bn:
     #    x = BatchNormalization()(x)
     #x = Activation(activation='relu')(x)
+    #x = Dropout(0.5)(x)
+
     actions = Dense(m*n+1)(x)
 
     env_actor = Model(inputs=observation, outputs=actions)

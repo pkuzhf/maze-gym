@@ -24,7 +24,7 @@ env_tau = get_tau(env_s)
 env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=env_tau), policyB=RandomPolicy(), eps_forB=0.5, half_eps_step=1000, eps_min=0.1)
 env_test_policy = BoltzmannQPolicy(tau=env_tau)
 
-env = DQN(model=env_net, gamma=1.0, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy,  nb_actions=env_gym.action_space.n, memory=env_memory, custom_model_objects={'Scaleshift': Scaleshift})
+env = DQN(model=env_net, gamma=1.0, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy,  nb_actions=env_gym.action_space.n, memory=env_memory)
 env.compile(Adam(lr=1e-3))
 
 agent_env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=env_tau), policyB=RandomPolicy(), eps_forB=0.1)
@@ -39,7 +39,7 @@ agent_tau = get_tau(agent_s)
 agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=0)
 agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=0.1, half_eps_step=0)
 
-agent = DQN(model=agent_net, gamma=1.0, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory, custom_model_objects={'Scaleshift': Scaleshift})
+agent = DQN(model=agent_net, gamma=1.0, nb_steps_warmup=100, target_model_update=1000, enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
 agent.compile(Adam(lr=1e-3))
 
 env_gym.env = env
@@ -52,13 +52,13 @@ makedirs(result_folder)
 for round in range(nround):
     print('\n\nround ' + str(round) + '/' + str(nround))
 
-    #print('\n\nagent ')
-    #agent.fit(agent_gym, nb_steps=2000 if round<5 else 10000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
-    #agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+    print('\n\nagent')
+    agent.fit(agent_gym, nb_steps=500 if round>5 else 5000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+    agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
 
-    print('\n\nenv ')
+    print('\n\nenv')
     env.fit(env_gym, nb_steps=500, visualize=False, verbose=2)
     env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
 
-    #agent.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
-    #env.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)
+    agent.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
+    env.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)
