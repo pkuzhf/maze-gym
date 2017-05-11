@@ -18,7 +18,6 @@ class myDQNAgent(DQNAgent):
             raise ValueError('action_repetition must be >= 1, is {}'.format(action_repetition))
 
         self.training = True
-        nb_steps = nb_episodes
 
         callbacks = [] if not callbacks else callbacks[:]
 
@@ -29,7 +28,7 @@ class myDQNAgent(DQNAgent):
         if visualize:
             callbacks += [Visualizer()]
         history = History()
-        callbacks += [history]
+        #callbacks += [history]
         callbacks = CallbackList(callbacks)
         if hasattr(callbacks, 'set_model'):
             callbacks.set_model(self)

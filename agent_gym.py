@@ -21,7 +21,6 @@ class AGENT_GYM(gym.Env):
 
         self._seed()
 
-        self.agent = None
         self.ini_mazemap = ini_mazemap
 
     def _seed(self, seed=None):
@@ -30,8 +29,6 @@ class AGENT_GYM(gym.Env):
 
     def _reset(self):
         #utils.displayMap(self.ini_mazemap)
-        self.gamestep = 0
-
         [sx, sy, tx, ty] = utils.findSourceAndTarget(self.ini_mazemap)
         self.source = np.array([sx, sy])
         self.target = np.array([tx, ty])

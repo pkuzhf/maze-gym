@@ -77,6 +77,7 @@ def run():
 
         agent.save_weights(result_folder + '/agent_model_weights_{}.h5f'.format(str(round)), overwrite=True)
         env.save_weights(result_folder + '/generator_model_weights_{}.h5f'.format(str(round)), overwrite=True)
+
 run()
 
 #profile.run("run()", sort=1)
