@@ -73,20 +73,21 @@ def main():
     env_gym.agent = agent
     agent_gym.agent = agent
 
-    nround = 5000
-    result_folder = 'result' #datetime.datetime.now().isoformat()
-    makedirs(result_folder)
 
     print vars(config.Map)
     print vars(config.Training)
 
-    run()
+    run(agent, env, agent_gym, env_gym, task_name)
 
     #profile.run("run()", sort=1)
     #profile.run("run()", sort=2)
 
 
-def run():
+def run(agent, env, agent_gym, env_gym, task_name):
+
+    nround = 5000
+    result_folder = 'result' #datetime.datetime.now().isoformat()
+    makedirs(result_folder)
 
     for round in range(nround):
 
