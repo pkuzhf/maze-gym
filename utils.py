@@ -6,6 +6,7 @@ from keras.layers import Layer
 # right, down, up, left
 dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
 dir_symbols = ['>', 'v', '^', '<']
+map_symbols = ['.', '#', 'S', 'T']
 
 class Cell:
     Empty  = np.asarray([1,0,0,0])
@@ -68,7 +69,7 @@ def displayMap(mazemap):
             cell = getCellValue(mazemap, i, j)
             for k in range(Cell.CellSize):
                 if cell[k]:
-                    output += str(k)
+                    output += map_symbols[k]
         output += '\n'
     print output,
 
