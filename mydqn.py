@@ -16,9 +16,14 @@ from rl.keras_future import Model
 
 from rl.agents.dqn import DQNAgent
 from myCallback import myTrainEpisodeLogger
-
+from collections import deque
 
 class myDQNAgent(DQNAgent):
+
+    def __init__(self, *args, **kwargs):
+        self.max_reward = -1e20
+        self.reward_his = deque(maxlen=10000)
+        super(myDQNAgent, self).__init__(*args, **kwargs)
 
     def fit(self, env, nb_episodes, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
@@ -35,7 +40,7 @@ class myDQNAgent(DQNAgent):
         if verbose == 1:
             callbacks += [TrainIntervalLogger(interval=log_interval)]
         elif verbose > 1:
-            callbacks += [myTrainEpisodeLogger()]
+            callbacks += [myTrainEpisodeLogger(self)]
         if visualize:
             callbacks += [Visualizer()]
         history = History()

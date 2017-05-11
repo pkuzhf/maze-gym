@@ -50,7 +50,7 @@ def main():
         eps_forB=config.Training.EnvTrainEps, half_eps_step=config.Training.EnvTrainEps_HalfStep, eps_min=config.Training.EnvTrainEps_Min)
     env_test_policy = MaskedBoltzmannQPolicy(tau=env_tau)
 
-    env = mDQN(model=env_net, gamma=1.0, delta_clip=1, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate,
+    env = mDQN(model=env_net, gamma=1.0, delta_clip=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate,
         enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
@@ -65,7 +65,7 @@ def main():
         half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
     agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTestEps)
 
-    agent = mDQN(model=agent_net, gamma=1.0, delta_clip=1, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
+    agent = mDQN(model=agent_net, gamma=1.0, delta_clip=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
         enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
 
