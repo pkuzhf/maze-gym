@@ -20,10 +20,10 @@ class Training:
     RewardScale = 3
 
     EnvTrainEps = 1.0
-    EnvTrainEps_Min = 0.1
+    EnvTrainEps_Min = 0.2
     EnvTrainEps_HalfStep = 5000
     AgentTrainEps = 1.0
-    AgentTrainEps_Min = 0.1
+    AgentTrainEps_Min = 0.2
     AgentTrainEps_HalfStep = 5000
 
     EnvWarmup = 32

@@ -42,7 +42,7 @@ def get_agent_net():
     # x = Activation(activation='relu')(x)
     # x = Dropout(0.5)(x)
 
-    actions = Dense(4, activation=None)(x)
+    actions = Dense(4)(x)
 
     agent_model = Model(inputs=observation, outputs=actions, name='agent')
 

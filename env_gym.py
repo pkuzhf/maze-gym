@@ -36,7 +36,6 @@ class ENV_GYM(gym.Env):
         self.conflict_count = 0
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=10000)
-        self.qlogger = utils.qlogger()
 
     def _reset(self):
         self.gamestep = 0
@@ -46,9 +45,6 @@ class ENV_GYM(gym.Env):
         self.mask = self._getmask(self.mazemap)
         self.env.policy.set_mask(self.mask)
         self.env.test_policy.set_mask(self.mask)
-        self.env.policy.qlogger = self.qlogger
-        self.env.test_policy.qlogger = self.qlogger
-
         return self.mazemap
 
     def _getmask(self, mazemap):

@@ -17,13 +17,19 @@ from rl.keras_future import Model
 from rl.agents.dqn import DQNAgent
 from myCallback import myTrainEpisodeLogger
 from collections import deque
+from utils import qlogger
 
 class myDQNAgent(DQNAgent):
 
     def __init__(self, *args, **kwargs):
+
+        super(myDQNAgent, self).__init__(*args, **kwargs)
+
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=10000)
-        super(myDQNAgent, self).__init__(*args, **kwargs)
+        self.qlogger = qlogger()
+        self.policy.qlogger = self.qlogger
+        self.test_policy.qlogger = self.qlogger
 
     def fit(self, env, nb_episodes, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
@@ -132,11 +138,7 @@ class myDQNAgent(DQNAgent):
 
     def compile(self, optimizer, metrics=None):
 
-        # register default metrics
-        if metrics is not None:
-            metrics = [delta_q, mean_q, max_q, min_q] + metrics
-        else:
-            metrics = [delta_q, mean_q, max_q, min_q]
+        metrics = []
 
         # We never train the target model, hence we can set the optimizer and loss arbitrarily.
         self.target_model = clone_model(self.model, self.custom_model_objects)
@@ -175,15 +177,3 @@ class myDQNAgent(DQNAgent):
         self.trainable_model = trainable_model
 
         self.compiled = True
-
-def mean_q(y_true, y_pred):
-    return K.mean(K.mean(y_pred, axis=-1))
-
-def max_q(y_true, y_pred):
-    return K.mean(K.max(y_pred, axis=-1))
-
-def min_q(y_true, y_pred):
-    return K.mean(K.min(y_pred, axis=-1))
-
-def delta_q(y_true, y_pred):
-    return K.mean(K.max(y_true-y_pred, axis=-1))

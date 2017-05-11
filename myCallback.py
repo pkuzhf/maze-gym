@@ -53,7 +53,10 @@ class myTrainEpisodeLogger(Callback):
         self.dqn.reward_his.append(episode_reward)
         self.dqn.max_reward = max(self.dqn.max_reward, episode_reward)
 
-        template = '{name} episode: {episode}, step: {episode_steps}, reward: cur {episode_reward:.2f}, avg {average_reward:.2f}, max {max_reward:.2f} {metrics}, steps per second: {sps:.0f}, duration: {duration:.3f}s, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}] total step {step}'
+        template = '{name} episode: {episode}, step: {episode_steps}, reward: cur {episode_reward:.2f}, avg {average_reward:.2f}, max {max_reward:.2f}, ' \
+                   '{metrics}, qvalue: [{curminq:.3f}, {curmaxq:.3f}] / [{minq:.3f}, {maxq:.3f}] steps per second: {sps:.0f}, duration: {duration:.3f}s, ' \
+                   'mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}], total step {step}'
+
         variables = {
             'name': self.params['name'],
             'episode': episode + 1,
@@ -65,12 +68,16 @@ class myTrainEpisodeLogger(Callback):
             'average_reward': np.mean(self.dqn.reward_his),
             'max_reward': self.dqn.max_reward,
             'metrics': metrics_text,
+            'curmaxq': self.dqn.qlogger.cur_maxq,
+            'maxq': self.dqn.qlogger.maxq,
+            'curminq': self.dqn.qlogger.cur_minq,
+            'minq': self.dqn.qlogger.minq,
             'reward_mean': np.mean(self.rewards[episode]),
             'reward_min': np.min(self.rewards[episode]),
             'reward_max': np.max(self.rewards[episode]),
             'action_mean': np.mean(self.actions[episode]),
             'action_min': np.min(self.actions[episode]),
-            'action_max': np.max(self.actions[episode]),
+            'action_max': np.max(self.actions[episode])
         }
         print(template.format(**variables))
 

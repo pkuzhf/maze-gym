@@ -83,8 +83,6 @@ def main():
     print(vars(config.Map))
     print(vars(config.Training))
 
-    #profile.run("run()", sort=1)
-    #profile.run("run()", sort=2)
 
 def run(agent, env, agent_gym, env_gym, task_name):
 
@@ -115,3 +113,5 @@ def run(agent, env, agent_gym, env_gym, task_name):
 
 if __name__ == "__main__":
     main()
+    #profile.run("main()", sort=1)
+
