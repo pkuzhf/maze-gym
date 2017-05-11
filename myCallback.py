@@ -42,7 +42,7 @@ class myTrainEpisodeLogger(Callback):
                     metrics_template += ', '
                 try:
                     value = np.nanmean(metrics[:, idx])
-                    metrics_template += '{}: {:f}'
+                    metrics_template += '{}: {:.3f}'
                 except Warning:
                     value = '--'
                     metrics_template += '{}: {}'
@@ -53,7 +53,7 @@ class myTrainEpisodeLogger(Callback):
         self.dqn.reward_his.append(episode_reward)
         self.dqn.max_reward = max(self.dqn.max_reward, episode_reward)
 
-        template = '{name} episode: {episode}, step: {episode_steps}, reward: cur {episode_reward:.2f}, avg {average_reward:.2f}, max {max_reward:.2f} {metrics}, steps per second: {sps:.0f}, duration: {duration:.3f}s, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}] {step}'
+        template = '{name} episode: {episode}, step: {episode_steps}, reward: cur {episode_reward:.2f}, avg {average_reward:.2f}, max {max_reward:.2f} {metrics}, steps per second: {sps:.0f}, duration: {duration:.3f}s, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}] total step {step}'
         variables = {
             'name': self.params['name'],
             'episode': episode + 1,
