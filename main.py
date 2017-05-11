@@ -22,9 +22,11 @@ import keras.backend.tensorflow_backend as KTF
 KTF.set_session(get_session())
 
 def main():
-    
-    print len(sys.argv)
-    print sys.argv
+
+    argv = '\n\n'
+    for arg in sys.argv:
+        argv += arg + ' '
+    print(argv)
 
     if len(sys.argv) >= 2:
         task_name = sys.argv[1]
@@ -43,66 +45,69 @@ def main():
     env_net = get_env_net()
     env_memory = SequentialMemory(limit=50000, window_length=1)
 
-    env_s = config.Training.RewardScale # the significant reward scale
-    env_tau = get_tau(env_s)
-    env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), 
-        eps_forB=config.Training.EnvTrainEpsForB, half_eps_step=config.Training.EnvTrainHalfEpsStep, eps_min=config.Training.EnvTrainEpsMin)
+    env_tau = get_tau(config.Training.RewardScale)
+    env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(),
+        eps_forB=config.Training.EnvTrainEps, half_eps_step=config.Training.EnvTrainEps_HalfStep, eps_min=config.Training.EnvTrainEps_Min)
     env_test_policy = MaskedBoltzmannQPolicy(tau=env_tau)
 
-    env = mDQN(model=env_net, gamma=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate, 
+    env = mDQN(model=env_net, gamma=1.0, delta_clip=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate,
         enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
-    agent_env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=0.1)
+    agent_env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=config.Training.EnvGenEps)
     agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, agent_env_policy)
     agent_gym.seed(config.Game.Seed)
 
     agent_net = get_agent_net()
     agent_memory = SequentialMemory(limit=50000, window_length=1)
 
-    agent_s = config.Training.RewardScale # the significant reward scale
-    agent_tau = get_tau(agent_s)
-    agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEpsForB, 
-        half_eps_step=config.Training.AgentTrainHalfEpsStep, eps_min=config.Training.AgentTrainEpsMin)
-    agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTestEpsForB)
+    agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
+        half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
+    agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTestEps)
 
-    agent = mDQN(model=agent_net, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
-     enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
+    agent = mDQN(model=agent_net, gamma=1.0, delta_clip=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
+        enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
 
     env_gym.env = env
     env_gym.agent = agent
     agent_gym.agent = agent
 
-
-    print vars(config.Map)
-    print vars(config.Training)
+    print(argv)
+    print(vars(config.Map))
+    print(vars(config.Training))
 
     run(agent, env, agent_gym, env_gym, task_name)
+
+    print(argv)
+    print(vars(config.Map))
+    print(vars(config.Training))
 
     #profile.run("run()", sort=1)
     #profile.run("run()", sort=2)
 
-
 def run(agent, env, agent_gym, env_gym, task_name):
 
-    nround = 5000
-    result_folder = 'result' #datetime.datetime.now().isoformat()
+    nround = 1000
+    result_folder = 'result'
     makedirs(result_folder)
 
     for round in range(nround):
 
         print('\n\nround ' + str(round) + '/' + str(nround))
 
-        print('\n\nagent')
-        agent.fit(agent_gym, nb_episodes=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
-        agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
-        agent.nb_steps_warmup = 0
+        for subround in range(100):
 
-        print('\n\nenv')
-        env.fit(env_gym, nb_episodes=100, visualize=False, verbose=2)
+            print('\n\nagent: round ' + str(subround) + ' / ' + str(round))
+            agent.fit(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+            agent.nb_steps_warmup = 0
+
+            print('\n\nenv: round ' + str(subround) + ' / ' + str(round))
+            env.fit(env_gym, nb_episodes=10, visualize=False, verbose=2)
+            env.nb_steps_warmup = 0
+
+        agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
         env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
-        env.nb_steps_warmup = 0
 
         agent.save_weights(result_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
         env.save_weights(result_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)

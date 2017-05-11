@@ -1,14 +1,17 @@
 
 from rl.callbacks import *
+from collections import deque
 
 class myTrainEpisodeLogger(Callback):
-    def __init__(self):
+
+    def __init__(self, dqn):
         # Some algorithms compute multiple episodes at once since they are multi-threaded.
         self.episode_start = {}
         self.rewards = {}
         self.actions = {}
         self.metrics = {}
         self.step = 0
+        self.dqn = dqn
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
@@ -39,21 +42,28 @@ class myTrainEpisodeLogger(Callback):
                     metrics_template += ', '
                 try:
                     value = np.nanmean(metrics[:, idx])
-                    metrics_template += '{}: {:f}'
+                    metrics_template += '{}: {:.3f}'
                 except Warning:
                     value = '--'
                     metrics_template += '{}: {}'
                 metrics_variables += [name, value]
         metrics_text = metrics_template.format(*metrics_variables)
 
-        template = 'episode: {episode}, step: {step}, duration: {duration:.3f}s, episode steps: {episode_steps}, steps per second: {sps:.0f}, episode reward: {episode_reward:.3f}, {metrics}, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}]'
+        episode_reward = np.sum(self.rewards[episode])
+        self.dqn.reward_his.append(episode_reward)
+        self.dqn.max_reward = max(self.dqn.max_reward, episode_reward)
+
+        template = '{name} episode: {episode}, step: {episode_steps}, reward: cur {episode_reward:.2f}, avg {average_reward:.2f}, max {max_reward:.2f} {metrics}, steps per second: {sps:.0f}, duration: {duration:.3f}s, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}] total step {step}'
         variables = {
+            'name': self.params['name'],
             'episode': episode + 1,
             'step': self.step,
             'duration': duration,
             'episode_steps': episode_steps,
             'sps': float(episode_steps) / duration,
-            'episode_reward': np.sum(self.rewards[episode]),
+            'episode_reward': episode_reward,
+            'average_reward': np.mean(self.dqn.reward_his),
+            'max_reward': self.dqn.max_reward,
             'metrics': metrics_text,
             'reward_mean': np.mean(self.rewards[episode]),
             'reward_min': np.min(self.rewards[episode]),
