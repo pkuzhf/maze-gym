@@ -10,6 +10,7 @@ from rl.agents.dqn import DQNAgent
 from gym import spaces
 from gym.utils import seeding
 from agent_gym import AGENT_GYM
+from collections import deque
 
 
 class ENV_GYM(gym.Env):
@@ -30,11 +31,12 @@ class ENV_GYM(gym.Env):
         self.env = None
         self.agent = None
         self.mask = None
+        self.gamestep = 0
         self.invalid_count = 0
         self.conflict_count = 0
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=10000)
-        self.action_reward_his = [np.zeros(2) for _ in range(self.action_space.n)]
+        self.qlogger = utils.qlogger()
 
     def _reset(self):
         self.gamestep = 0
@@ -44,13 +46,16 @@ class ENV_GYM(gym.Env):
         self.mask = self._getmask(self.mazemap)
         self.env.policy.set_mask(self.mask)
         self.env.test_policy.set_mask(self.mask)
+        self.env.policy.qlogger = self.qlogger
+        self.env.test_policy.qlogger = self.qlogger
+
         return self.mazemap
 
     def _getmask(self, mazemap):
         mask = np.zeros(self.action_space.n)
         for i in range(config.Map.Height):
             for j in range(config.Map.Width):
-                if utils.nequalCellValue(mazemap, i, j, utils.Cell.Empty):
+                if not mazemap[i, j, utils.Cell.Empty]:
                     mask[i*config.Map.Width+j] = 1
         return mask
 
@@ -65,11 +70,11 @@ class ENV_GYM(gym.Env):
         if mask_invalid:
             for i in range(0, config.Map.Height):
                 for j in range(0, config.Map.Width):
-                    if utils.equalCellValue(mazemap, i, j, utils.Cell.Empty):
-                        utils.setCellValue(mazemap, i, j, utils.Cell.Wall)
+                    if mazemap[i, j, utils.Cell.Empty]:
+                        mazemap[i, j] = utils.Cell.WallV
                         if not self.isvalid_mazemap(mazemap):
                             mask[i*config.Map.Width+j] = 1
-                        utils.setCellValue(mazemap, i, j, utils.Cell.Empty)
+                        mazemap[i, j] = utils.Cell.EmptyV
 
     def _act(self, mazemap, action, mask):
 
@@ -82,10 +87,10 @@ class ENV_GYM(gym.Env):
 
             x, y = action / config.Map.Width, action % config.Map.Width
 
-            if utils.equalCellValue(mazemap, x, y, utils.Cell.Empty):
-                utils.setCellValue(mazemap, x, y, utils.Cell.Wall)
+            if mazemap[x, y, utils.Cell.Empty]:
+                mazemap[x, y] =  utils.Cell.WallV
                 if not self.isvalid_mazemap(mazemap):
-                    utils.setCellValue(mazemap, x, y, utils.Cell.Empty)
+                    mazemap[x, y] = utils.Cell.EmptyV
                     self.invalid_count += 1
                     invalid = True
                     done = True
@@ -94,7 +99,7 @@ class ENV_GYM(gym.Env):
                 conflict = True
                 done = True
 
-            if mask is not None:
+            if mask is not None and not done:
                 self._update_mask(action, mask, mazemap)
 
         return done, conflict, invalid
@@ -114,8 +119,8 @@ class ENV_GYM(gym.Env):
         if done:
             self.reward_his.append(reward)
             self.max_reward = max(self.max_reward, reward)
-            print('gamestep', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
-                  'minq', '%0.2f / %0.2f' % (self.env.policy.cur_minq, self.env.policy.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.env.policy.cur_maxq-reward, self.env.policy.cur_maxq, self.env.policy.maxq),
+            print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
+                  'minq', '%0.2f / %0.2f' % (self.qlogger.cur_minq, self.qlogger.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.qlogger.cur_maxq-reward, self.qlogger.cur_maxq, self.qlogger.maxq),
                   'eps', '%0.2f / %0.2f)' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
             utils.displayMap(self.mazemap)
 
@@ -133,6 +138,7 @@ class ENV_GYM(gym.Env):
         #return self.dfs_path(mazemap)
 
         agent_gym = AGENT_GYM(mazemap)
+        agent_gym.agent = self.agent
         agent_gym.reset()
 
         gamestep = 0
@@ -152,7 +158,7 @@ class ENV_GYM(gym.Env):
         if mazemap is None:
             mazemap = utils.initMazeMap()
 
-        if policy == None:
+        if policy is None:
             policy = self.env.test_policy
 
         mask = self._getmask(mazemap)
@@ -173,7 +179,6 @@ class ENV_GYM(gym.Env):
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
             return False
 
-        from collections import deque
         queue = deque()
         queue.append([sx,sy])
         visited = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int)
@@ -186,13 +191,11 @@ class ENV_GYM(gym.Env):
                 [nx, ny] = [cx, cy] + utils.dirs[k]
                 if not utils.inMap(nx, ny) or visited[nx][ny]:
                     continue
-                if utils.equalCellValue(mazemap, nx, ny, utils.Cell.Empty):
+                if mazemap[nx, ny, utils.Cell.Empty]:
                     queue.append([nx, ny])
                 if nx == tx and ny == ty:
                     return True
 
-        #print 'Invalid Map'
-        #utils.displayMap(mazemap)
         return False
 
     def shortest_path(self, mazemap):
@@ -201,7 +204,6 @@ class ENV_GYM(gym.Env):
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
             return -1
 
-        from collections import deque
         queue = deque()
         queue.append([sx, sy])
         shortest_path = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
@@ -217,12 +219,16 @@ class ENV_GYM(gym.Env):
                 [nx, ny] = [cx, cy] + utils.dirs[k]
                 if not utils.inMap(nx, ny):
                     continue
-                if utils.equalCellValue(mazemap, nx, ny, utils.Cell.Empty) or utils.equalCellValue(mazemap, nx, ny, utils.Cell.Target):
+                if mazemap[nx, ny, utils.Cell.Empty] or mazemap[nx, ny, utils.Cell.Target]:
                     if shortest_path[nx][ny] == 0 or shortest_path[nx][ny] > cur_path_len + 1:
                         queue.append([nx, ny])
                         shortest_path[nx][ny] = cur_path_len + 1
 
         #print('shortest_path:' + str(shortest_path[tx][ty]))
+
+        #if shortest_path[tx][ty]==11:
+        #    utils.displayMap(mazemap)
+        #    print('error')
 
         return shortest_path[tx][ty]
 
@@ -232,7 +238,6 @@ class ENV_GYM(gym.Env):
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
             return -1
 
-        from collections import deque
         queue = deque()
         queue.append([tx, ty])
         shortest_path = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
@@ -248,7 +253,7 @@ class ENV_GYM(gym.Env):
                 [nx, ny] = [cx, cy] + utils.dirs[k]
                 if not utils.inMap(nx, ny):
                     continue
-                if utils.equalCellValue(mazemap, nx, ny, utils.Cell.Empty) or utils.equalCellValue(mazemap, nx, ny, utils.Cell.Source):
+                if mazemap[nx, ny, utils.Cell.Empty] or mazemap[nx, ny, utils.Cell.Source]:
                     if shortest_path[nx][ny] == 0 or shortest_path[nx][ny] > cur_path_len + 1:
                         queue.append([nx, ny])
                         shortest_path[nx][ny] = cur_path_len + 1
@@ -264,7 +269,7 @@ class ENV_GYM(gym.Env):
             for i in range(len(utils.dirs)):
                 dx = sx + utils.dirs[i][0]
                 dy = sy + utils.dirs[i][1]
-                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall]:
                     distance_dirs.append(shortest_path[dx][dy])
                     valid_dir_n += 1
                 else:
@@ -295,7 +300,7 @@ class ENV_GYM(gym.Env):
             for i in range(len(utils.dirs)):
                 dx = sx + utils.dirs[i][0]
                 dy = sy + utils.dirs[i][1]
-                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall]:
                     valid_dirs.append(i)
             selected_dir = valid_dirs[np.random.randint(len(valid_dirs))]
             sx += utils.dirs[selected_dir][0]
@@ -313,14 +318,14 @@ class ENV_GYM(gym.Env):
             # right
             dx = sx + utils.dirs[0][0]
             dy = sy + utils.dirs[0][1]     
-            if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+            if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall]:
                 sx = dx
                 sy = dy
             else:
                 # down
                 dx = sx + utils.dirs[1][0]
                 dy = sy + utils.dirs[1][1]     
-                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall]:
                     sx = dx
                     sy = dy
             step += 1
@@ -337,7 +342,7 @@ class ENV_GYM(gym.Env):
             for i in range(len(utils.dirs)):
                 dx = sx + utils.dirs[i][0]
                 dy = sy + utils.dirs[i][1]     
-                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall]:
                     sx = dx
                     sy = dy
                     break
@@ -356,7 +361,7 @@ class ENV_GYM(gym.Env):
                 selected_dir = np.argmax(np.random.multinomial(1, [0.4, 0.4, 0.1, 0.1]))
                 dx = sx + utils.dirs[selected_dir][0]
                 dy = sy + utils.dirs[selected_dir][1]     
-                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall):
+                if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall]:
                     sx = dx
                     sy = dy
                     break
@@ -382,7 +387,7 @@ class ENV_GYM(gym.Env):
             for i in range(len(utils.dirs)):
                 dx = x + utils.dirs[i][0]
                 dy = y + utils.dirs[i][1]
-                if utils.inMap(dx, dy) and not utils.equalCellValue(mazemap, dx, dy, utils.Cell.Wall) and visited[dx][dy] == 0:
+                if utils.inMap(dx, dy) and not mazemap[dx, dy, utils.Cell.Wall] and visited[dx][dy] == 0:
                     expended = True
                     visited[dx][dy] = 1
                     stack.append([dx, dy])
@@ -393,3 +398,11 @@ class ENV_GYM(gym.Env):
                 step += 1
 
         return step
+
+    def Wall_count(self, mazemap):
+        Wall_count = 0
+        for i in range(0, config.Map.Height):
+            for j in range(0, config.Map.Width):
+                if mazemap[i, j, utils.Cell.Wall] == 1:
+                    Wall_count += 1
+        return Wall_count

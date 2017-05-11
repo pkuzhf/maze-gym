@@ -4,6 +4,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import sys
 import config
+import profile
 from utils import *
 import datetime
 import numpy as np
@@ -14,6 +15,7 @@ from agent_gym import ADVERSARIAL_AGENT_GYM
 from keras.optimizers import *
 from rl.agents.dqn import DQNAgent as DQN
 from policy import *
+from mydqn import myDQNAgent as mDQN
 from rl.memory import SequentialMemory
 
 import keras.backend.tensorflow_backend as KTF
@@ -43,10 +45,10 @@ def main():
 
     env_s = config.Training.RewardScale # the significant reward scale
     env_tau = get_tau(env_s)
-    env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=config.Training.EnvTrainEpsForB, half_eps_step=1000, eps_min=0.1)
+    env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=config.Training.EnvTrainEpsForB, half_eps_step=5000, eps_min=0.1)
     env_test_policy = MaskedBoltzmannQPolicy(tau=env_tau)
 
-    env = DQN(model=env_net, gamma=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate, 
+    env = mDQN(model=env_net, gamma=1.0, delta_clip=5, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate, 
         enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
@@ -60,33 +62,45 @@ def main():
     agent_s = config.Training.RewardScale # the significant reward scale
     agent_tau = get_tau(agent_s)
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEpsForB, 
-        half_eps_step=1000, eps_min=0.1)
+        half_eps_step=5000, eps_min=0.1)
     agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTestEpsForB)
 
-    agent = DQN(model=agent_net, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
+    agent = mDQN(model=agent_net, gamma=1.0, delta_clip=5, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
      enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
 
     env_gym.env = env
     env_gym.agent = agent
+    agent_gym.agent = agent
 
-    nround = 1000
-    result_folder = '../maze_result' #datetime.datetime.now().isoformat()
+    nround = 5000
+    result_folder = 'result' #datetime.datetime.now().isoformat()
     makedirs(result_folder)
 
     print vars(config.Map)
     print vars(config.Training)
 
+    run()
+
+    #profile.run("run()", sort=1)
+    #profile.run("run()", sort=2)
+
+
+def run():
+
     for round in range(nround):
+
         print('\n\nround ' + str(round) + '/' + str(nround))
 
         print('\n\nagent')
-        agent.fit(agent_gym, nb_steps=500 if round>5 else 5000, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+        agent.fit(agent_gym, nb_episodes=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
         agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+        agent.nb_steps_warmup = 0
 
         print('\n\nenv')
-        env.fit(env_gym, nb_steps=500, visualize=False, verbose=2)
+        env.fit(env_gym, nb_episodes=100, visualize=False, verbose=2)
         env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
+        env.nb_steps_warmup = 0
 
         agent.save_weights(result_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
         env.save_weights(result_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
