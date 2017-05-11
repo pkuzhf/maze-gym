@@ -224,6 +224,10 @@ class ENV_GYM(gym.Env):
 
         #print('shortest_path:' + str(shortest_path[tx][ty]))
 
+        #if shortest_path[tx][ty]==11:
+        #    utils.displayMap(mazemap)
+        #    print('error')
+
         return shortest_path[tx][ty]
 
     def shortest_random_path(self, mazemap):
