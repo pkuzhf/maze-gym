@@ -4,10 +4,7 @@ from rl.callbacks import *
 class myTrainEpisodeLogger(Callback):
     def __init__(self):
         # Some algorithms compute multiple episodes at once since they are multi-threaded.
-        # We therefore use a dictionary that is indexed by the episode to separate episodes
-        # from each other.
         self.episode_start = {}
-        self.observations = {}
         self.rewards = {}
         self.actions = {}
         self.metrics = {}
@@ -24,16 +21,14 @@ class myTrainEpisodeLogger(Callback):
 
     def on_episode_begin(self, episode, logs):
         self.episode_start[episode] = timeit.default_timer()
-        self.observations[episode] = []
         self.rewards[episode] = []
         self.actions[episode] = []
         self.metrics[episode] = []
 
     def on_episode_end(self, episode, logs):
         duration = timeit.default_timer() - self.episode_start[episode]
-        episode_steps = len(self.observations[episode])
+        episode_steps = len(self.rewards[episode])
 
-        # Format all metrics.
         metrics = np.array(self.metrics[episode])
         metrics_template = ''
         metrics_variables = []
@@ -51,7 +46,7 @@ class myTrainEpisodeLogger(Callback):
                 metrics_variables += [name, value]
         metrics_text = metrics_template.format(*metrics_variables)
 
-        template = 'episode: {episode}, step: {step}, duration: {duration:.3f}s, episode steps: {episode_steps}, steps per second: {sps:.0f}, episode reward: {episode_reward:.3f}, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}], mean observation: {obs_mean:.3f} [{obs_min:.3f}, {obs_max:.3f}], {metrics}'
+        template = 'episode: {episode}, step: {step}, duration: {duration:.3f}s, episode steps: {episode_steps}, steps per second: {sps:.0f}, episode reward: {episode_reward:.3f}, {metrics}, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}]'
         variables = {
             'episode': episode + 1,
             'step': self.step,
@@ -59,29 +54,24 @@ class myTrainEpisodeLogger(Callback):
             'episode_steps': episode_steps,
             'sps': float(episode_steps) / duration,
             'episode_reward': np.sum(self.rewards[episode]),
+            'metrics': metrics_text,
             'reward_mean': np.mean(self.rewards[episode]),
             'reward_min': np.min(self.rewards[episode]),
             'reward_max': np.max(self.rewards[episode]),
             'action_mean': np.mean(self.actions[episode]),
             'action_min': np.min(self.actions[episode]),
             'action_max': np.max(self.actions[episode]),
-            'obs_mean': np.mean(self.observations[episode]),
-            'obs_min': np.min(self.observations[episode]),
-            'obs_max': np.max(self.observations[episode]),
-            'metrics': metrics_text,
         }
         print(template.format(**variables))
 
         # Free up resources.
         del self.episode_start[episode]
-        del self.observations[episode]
         del self.rewards[episode]
         del self.actions[episode]
         del self.metrics[episode]
 
     def on_step_end(self, step, logs):
         episode = logs['episode']
-        self.observations[episode].append(logs['observation'])
         self.rewards[episode].append(logs['reward'])
         self.actions[episode].append(logs['action'])
         self.metrics[episode].append(logs['metrics'])

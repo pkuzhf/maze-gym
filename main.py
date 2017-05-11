@@ -105,5 +105,6 @@ def run():
         agent.save_weights(result_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
         env.save_weights(result_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
 
+
 if __name__ == "__main__":
     main()
