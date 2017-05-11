@@ -16,13 +16,24 @@ class StrongMazeEnv:
     EvaluateFile = '/tmp/evaluate.txt'
 
 class Training:
-	RewardScale = 3
-	EnvTrainEpsForB = 0.1
-	EnvWarmup = 50
-	EnvTargetModelUpdate = 1e-3
-	EnvLearningRate = 1e-3
-	AgentTrainEpsForB = 0.1
-	AgentTestEpsForB = 0.1
-	AgentWarmup = 50
-	AgentTargetModelUpdate = 1e-3
-	AgentLearningRate = 1e-3
+
+    RewardScale = 3
+
+    EnvTrainEps = 1.0
+    EnvTrainEps_Min = 0.1
+    EnvTrainEps_HalfStep = 5000
+    AgentTrainEps = 1.0
+    AgentTrainEps_Min = 0.1
+    AgentTrainEps_HalfStep = 5000
+
+    EnvWarmup = 32
+    AgentWarmup = 32
+
+    EnvLearningRate = 1e-3
+    AgentLearningRate = 1e-3
+
+    EnvTargetModelUpdate = 1e-3
+    AgentTargetModelUpdate = 1e-3
+
+    AgentTestEps = 0.0
+    EnvGenEps = 0.1

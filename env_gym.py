@@ -117,11 +117,11 @@ class ENV_GYM(gym.Env):
 
         self.gamestep += 1
         if done:
-            self.reward_his.append(reward)
-            self.max_reward = max(self.max_reward, reward)
-            print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
-                  'minq', '%0.2f / %0.2f' % (self.qlogger.cur_minq, self.qlogger.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.qlogger.cur_maxq-reward, self.qlogger.cur_maxq, self.qlogger.maxq),
-                  'eps', '%0.2f / %0.2f)' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
+            #self.reward_his.append(reward)
+            #self.max_reward = max(self.max_reward, reward)
+            #print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
+            #      'minq', '%0.2f / %0.2f' % (self.qlogger.cur_minq, self.qlogger.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.qlogger.cur_maxq-reward, self.qlogger.cur_maxq, self.qlogger.maxq),
+            #      'eps', '%0.2f / %0.2f' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
             utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}

@@ -1,11 +1,22 @@
 from __future__ import division
 import warnings
 import numpy as np
+import warnings
 from copy import deepcopy
-from keras.callbacks import History
+
+import keras.backend as K
+from keras.layers import Lambda, Input, Layer, Dense
 from rl.callbacks import TestLogger, TrainEpisodeLogger, TrainIntervalLogger, Visualizer, CallbackList
+from keras.callbacks import History
+
+from rl.core import Agent
+from rl.policy import EpsGreedyQPolicy, GreedyQPolicy
+from rl.util import *
+from rl.keras_future import Model
+
 from rl.agents.dqn import DQNAgent
 from myCallback import myTrainEpisodeLogger
+
 
 class myDQNAgent(DQNAgent):
 
@@ -37,6 +48,7 @@ class myDQNAgent(DQNAgent):
         callbacks._set_env(env)
         params = {
             'nb_episodes': nb_episodes,
+            'name': self.model.name,
         }
         if hasattr(callbacks, 'set_params'):
             callbacks.set_params(params)
@@ -46,9 +58,6 @@ class myDQNAgent(DQNAgent):
         callbacks.on_train_begin()
 
         self.step = 0
-        observation = None
-        episode_reward = None
-        episode_step = None
 
         for episode in range(nb_episodes):
 
@@ -58,30 +67,7 @@ class myDQNAgent(DQNAgent):
             self.reset_states()
             observation = deepcopy(env.reset())
 
-            # Perform random starts at beginning of episode and do not record them into the experience.
-            # This slightly changes the start position between games.
-            #nb_random_start_steps = 0 if nb_max_start_steps == 0 else np.random.randint(nb_max_start_steps)
-            #for _ in range(nb_random_start_steps):
-            #    if start_step_policy is None:
-            #        action = env.action_space.sample()
-            #    else:
-            #        action = start_step_policy(observation)
-            #    callbacks.on_action_begin(action)
-            #    observation, reward, done, info = env.step(action)
-            #    observation = deepcopy(observation)
-            #    if self.processor is not None:
-            #        observation, reward, done, info = self.processor.process_step(observation, reward, done, info)
-            #    callbacks.on_action_end(action)
-            #    if done:
-            #        warnings.warn('Env ended before {} random steps could be performed at the start. You should probably lower the `nb_max_start_steps` parameter.'.format(nb_random_start_steps))
-            #        observation = deepcopy(env.reset())
-            #        if self.processor is not None:
-            #            observation = self.processor.process_observation(observation)
-            #        break
-            # At this point, we expect to be fully initialized.
-
-            done = False
-            while not done:
+            while True:
 
                 callbacks.on_step_begin(episode_step)
                 action = self.forward(observation)
@@ -110,22 +96,16 @@ class myDQNAgent(DQNAgent):
                 self.step += 1
 
                 if done:
-                    # We are in a terminal state but the agent hasn't yet seen it. We therefore
-                    # perform one more forward-backward call and simply ignore the action before
-                    # resetting the environment. We need to pass in `terminal=False` here since
-                    # the *next* state, that is the state of the newly reset environment, is
-                    # always non-terminal by convention.
-
                     self.forward(observation)
                     self.backward(0., terminal=False)
+                    break
 
-                    # This episode is finished, report and reset.
-                    episode_logs = {
-                        'episode_reward': episode_reward,
-                        'nb_episode_steps': episode_step,
-                        'nb_steps': self.step,
-                    }
-                    callbacks.on_episode_end(episode, episode_logs)
+            episode_logs = {
+                'episode_reward': episode_reward,
+                'nb_episode_steps': episode_step,
+                'nb_steps': self.step,
+            }
+            callbacks.on_episode_end(episode, episode_logs)
 
         callbacks.on_train_end(logs={'did_abort': False})
         self._on_train_end()
@@ -144,3 +124,61 @@ class myDQNAgent(DQNAgent):
         self.recent_action = action
 
         return action
+
+    def compile(self, optimizer, metrics=None):
+
+        # register default metrics
+        if metrics is not None:
+            metrics = [delta_q, mean_q, max_q, min_q] + metrics
+        else:
+            metrics = [delta_q, mean_q, max_q, min_q]
+
+        # We never train the target model, hence we can set the optimizer and loss arbitrarily.
+        self.target_model = clone_model(self.model, self.custom_model_objects)
+        self.target_model.compile(optimizer='sgd', loss='mse')
+        self.model.compile(optimizer='sgd', loss='mse')
+
+        # Compile model.
+        if self.target_model_update < 1.:
+            # We use the `AdditionalUpdatesOptimizer` to efficiently soft-update the target model.
+            updates = get_soft_target_model_updates(self.target_model, self.model, self.target_model_update)
+            optimizer = AdditionalUpdatesOptimizer(optimizer, updates)
+
+        def clipped_masked_error(args):
+            y_true, y_pred, mask = args
+            loss = huber_loss(y_true, y_pred, self.delta_clip)
+            loss *= mask  # apply element-wise mask
+            return K.sum(loss, axis=-1)
+
+        # Create trainable model. The problem is that we need to mask the output since we only
+        # ever want to update the Q values for a certain action. The way we achieve this is by
+        # using a custom Lambda layer that computes the loss. This gives us the necessary flexibility
+        # to mask out certain parameters by passing in multiple inputs to the Lambda layer.
+        y_pred = self.model.output
+        y_true = Input(name='y_true', shape=(self.nb_actions,))
+        mask = Input(name='mask', shape=(self.nb_actions,))
+        loss_out = Lambda(clipped_masked_error, output_shape=(1,), name='loss')([y_pred, y_true, mask])
+        ins = [self.model.input] if type(self.model.input) is not list else self.model.input
+        trainable_model = Model(input=ins + [y_true, mask], output=[loss_out, y_pred])
+        assert len(trainable_model.output_names) == 2
+        combined_metrics = {trainable_model.output_names[1]: metrics}
+        losses = [
+            lambda y_true, y_pred: y_pred,  # loss is computed in Lambda layer
+            lambda y_true, y_pred: K.zeros_like(y_pred),  # we only include this for the metrics
+        ]
+        trainable_model.compile(optimizer=optimizer, loss=losses, metrics=combined_metrics)
+        self.trainable_model = trainable_model
+
+        self.compiled = True
+
+def mean_q(y_true, y_pred):
+    return K.mean(K.mean(y_pred, axis=-1))
+
+def max_q(y_true, y_pred):
+    return K.mean(K.max(y_pred, axis=-1))
+
+def min_q(y_true, y_pred):
+    return K.mean(K.min(y_pred, axis=-1))
+
+def delta_q(y_true, y_pred):
+    return K.mean(K.max(y_true-y_pred, axis=-1))

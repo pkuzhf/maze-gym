@@ -46,8 +46,9 @@ class myTrainEpisodeLogger(Callback):
                 metrics_variables += [name, value]
         metrics_text = metrics_template.format(*metrics_variables)
 
-        template = 'episode: {episode}, step: {step}, duration: {duration:.3f}s, episode steps: {episode_steps}, steps per second: {sps:.0f}, episode reward: {episode_reward:.3f}, {metrics}, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}]'
+        template = '{name} episode: {episode}, step: {step}, episode steps: {episode_steps}, episode reward: {episode_reward:.3f}, {metrics}, steps per second: {sps:.0f}, duration: {duration:.3f}s, mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}]'
         variables = {
+            'name': self.params['name'],
             'episode': episode + 1,
             'step': self.step,
             'duration': duration,

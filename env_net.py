@@ -45,8 +45,8 @@ def get_env_net():
 
     actions = Dense(m*n+1)(x)
 
-    env_actor = Model(inputs=observation, outputs=actions)
+    env_net = Model(inputs=observation, outputs=actions, name='env')
 
     print('env model:')
-    print(env_actor.summary())
-    return env_actor
+    print(env_net.summary())
+    return env_net

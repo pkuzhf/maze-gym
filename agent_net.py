@@ -44,7 +44,7 @@ def get_agent_net():
 
     actions = Dense(4, activation=None)(x)
 
-    agent_model = Model(inputs=observation, outputs=actions)
+    agent_model = Model(inputs=observation, outputs=actions, name='agent')
 
     print('agent model:')
     print(agent_model.summary())
