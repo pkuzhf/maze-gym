@@ -2,12 +2,13 @@ import numpy as np
 import config
 import os
 from keras.layers import Layer
+import tensorflow as tf
 
 # right, down, up, left
 dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
 dir_symbols = ['>', 'v', '^', '<']
-#map_symbols = ['.', '#', 'S', 'T']
 map_symbols = ['0', '1', '2', '3']
+#map_symbols = ['.', '#', 'S', 'T']
 
 class Cell:
     CellSize = 4
@@ -76,7 +77,6 @@ def get_tau(reward_for_prob_one_of_ten):
     return reward_for_prob_one_of_ten / -np.log(0.1)
 
 def get_session():
-    import tensorflow as tf
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     config.gpu_options.allow_growth = True
     return tf.Session(config=config)
@@ -95,3 +95,13 @@ def get_session():
 
 #def getDistance(sx, sy, tx, ty):
 #    return abs(sx - tx) + abs(sy - ty)
+
+
+class qlogger(object):
+
+    def __init__(self):
+
+        self.minq = 1e20
+        self.maxq = -1e20
+        self.cur_minq = 1e20
+        self.cur_maxq = 1e20

@@ -3,13 +3,9 @@ from rl.util import *
 
 class Policy(object):
 
-    minq = 1e20
-    maxq = -1e20
-    cur_minq = 1e20
-    cur_maxq = 1e20
-
     def __init__(self):
         self.mask = None
+        self.qlogger = None
         self.eps_forB = 0
         self.eps_forC = 0
 
@@ -34,20 +30,23 @@ class Policy(object):
         return {}
 
     def log_qvalue(self, q_values):
-        if np.isnan(q_values).any():
-            print(q_values)
 
-        if self.mask is not None:
-            q_values = q_values * (1-self.mask)
+        if self.qlogger is not None:
 
-        Policy.cur_minq = np.min(q_values)
-        Policy.cur_maxq = np.max(q_values)
+            if np.isnan(q_values).any():
+                print(q_values)
 
-        if Policy.minq > Policy.cur_minq:
-            Policy.minq = Policy.cur_minq
+            if self.mask is not None:
+                q_values = q_values * (1-self.mask)
 
-        if Policy.maxq < Policy.cur_maxq:
-            Policy.maxq = Policy.cur_maxq
+            self.qlogger.cur_minq = np.min(q_values)
+            self.qlogger.cur_maxq = np.max(q_values)
+
+            if self.qlogger.minq > self.qlogger.cur_minq:
+                self.qlogger.minq = self.qlogger.cur_minq
+
+            if self.qlogger.maxq < self.qlogger.cur_maxq:
+                self.qlogger.maxq = self.qlogger.cur_maxq
 
 
 class RandomPolicy(Policy):

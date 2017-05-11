@@ -5,9 +5,7 @@ import gym
 from gym import spaces
 from rl.core import Processor
 from gym.utils import seeding
-
-
-
+from collections import deque
 
 class AGENT_GYM(gym.Env):
 
@@ -21,9 +19,10 @@ class AGENT_GYM(gym.Env):
             t += (spaces.Discrete(4),)
         self.observation_space = spaces.Tuple(t)
 
-        self.ini_mazemap = ini_mazemap
-
         self._seed()
+
+        self.agent = None
+        self.ini_mazemap = ini_mazemap
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -31,6 +30,8 @@ class AGENT_GYM(gym.Env):
 
     def _reset(self):
         #utils.displayMap(self.ini_mazemap)
+        self.gamestep = 0
+
         [sx, sy, tx, ty] = utils.findSourceAndTarget(self.ini_mazemap)
         self.source = np.array([sx, sy])
         self.target = np.array([tx, ty])

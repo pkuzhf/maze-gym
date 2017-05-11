@@ -10,6 +10,7 @@ from rl.agents.dqn import DQNAgent
 from gym import spaces
 from gym.utils import seeding
 from agent_gym import AGENT_GYM
+from collections import deque
 
 
 class ENV_GYM(gym.Env):
@@ -30,11 +31,12 @@ class ENV_GYM(gym.Env):
         self.env = None
         self.agent = None
         self.mask = None
+        self.gamestep = 0
         self.invalid_count = 0
         self.conflict_count = 0
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=10000)
-        self.action_reward_his = [np.zeros(2) for _ in range(self.action_space.n)]
+        self.qlogger = utils.qlogger()
 
     def _reset(self):
         self.gamestep = 0
@@ -44,6 +46,9 @@ class ENV_GYM(gym.Env):
         self.mask = self._getmask(self.mazemap)
         self.env.policy.set_mask(self.mask)
         self.env.test_policy.set_mask(self.mask)
+        self.env.policy.qlogger = self.qlogger
+        self.env.test_policy.qlogger = self.qlogger
+
         return self.mazemap
 
     def _getmask(self, mazemap):
@@ -114,8 +119,8 @@ class ENV_GYM(gym.Env):
         if done:
             self.reward_his.append(reward)
             self.max_reward = max(self.max_reward, reward)
-            print('gamestep', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
-                  'minq', '%0.2f / %0.2f' % (self.env.policy.cur_minq, self.env.policy.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.env.policy.cur_maxq-reward, self.env.policy.cur_maxq, self.env.policy.maxq),
+            print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
+                  'minq', '%0.2f / %0.2f' % (self.qlogger.cur_minq, self.qlogger.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.qlogger.cur_maxq-reward, self.qlogger.cur_maxq, self.qlogger.maxq),
                   'eps', '%0.2f / %0.2f)' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
             utils.displayMap(self.mazemap)
 
@@ -133,6 +138,7 @@ class ENV_GYM(gym.Env):
         #return self.dfs_path(mazemap)
 
         agent_gym = AGENT_GYM(mazemap)
+        agent_gym.agent = self.agent
         agent_gym.reset()
 
         gamestep = 0
@@ -173,7 +179,6 @@ class ENV_GYM(gym.Env):
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
             return False
 
-        from collections import deque
         queue = deque()
         queue.append([sx,sy])
         visited = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int)
@@ -199,7 +204,6 @@ class ENV_GYM(gym.Env):
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
             return -1
 
-        from collections import deque
         queue = deque()
         queue.append([sx, sy])
         shortest_path = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
@@ -234,7 +238,6 @@ class ENV_GYM(gym.Env):
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:
             return -1
 
-        from collections import deque
         queue = deque()
         queue.append([tx, ty])
         shortest_path = np.zeros([config.Map.Height, config.Map.Width], dtype=np.int) # zero for unvisited
