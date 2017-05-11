@@ -45,10 +45,11 @@ def main():
 
     env_s = config.Training.RewardScale # the significant reward scale
     env_tau = get_tau(env_s)
-    env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), eps_forB=config.Training.EnvTrainEpsForB, half_eps_step=5000, eps_min=0.1)
+    env_policy = EpsABPolicy(policyA=MaskedBoltzmannQPolicy(tau=env_tau), policyB=MaskedRandomPolicy(), 
+        eps_forB=config.Training.EnvTrainEpsForB, half_eps_step=config.Training.EnvTrainHalfEpsStep, eps_min=config.Training.EnvTrainEpsMin)
     env_test_policy = MaskedBoltzmannQPolicy(tau=env_tau)
 
-    env = mDQN(model=env_net, gamma=1.0, delta_clip=5, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate, 
+    env = mDQN(model=env_net, gamma=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate, 
         enable_dueling_network=False, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
@@ -62,10 +63,10 @@ def main():
     agent_s = config.Training.RewardScale # the significant reward scale
     agent_tau = get_tau(agent_s)
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEpsForB, 
-        half_eps_step=5000, eps_min=0.1)
+        half_eps_step=config.Training.AgentTrainHalfEpsStep, eps_min=config.Training.AgentTrainEpsMin)
     agent_test_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTestEpsForB)
 
-    agent = mDQN(model=agent_net, gamma=1.0, delta_clip=5, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
+    agent = mDQN(model=agent_net, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
      enable_dueling_network=False, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
 
