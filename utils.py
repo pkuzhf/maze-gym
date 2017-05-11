@@ -7,8 +7,8 @@ import tensorflow as tf
 # right, down, up, left
 dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
 dir_symbols = ['>', 'v', '^', '<']
-map_symbols = ['0', '1', '2', '3']
-#map_symbols = ['.', '#', 'S', 'T']
+#map_symbols = ['0', '1', '2', '3']
+map_symbols = ['.', '#', 'S', 'T']
 
 class Cell:
     CellSize = 4
