@@ -95,10 +95,10 @@ def run(agent, env, agent_gym, env_gym, task_name):
 
         for subround in range(100):
 
-            print('\n\nagent: subround ' + str(round) + ' / ' + str(subround))
-            agent.fit(agent_gym, nb_episodes=10, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
-            agent.nb_steps_warmup = 0
-            agent.test(agent_gym, nb_episodes=1, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+            #print('\n\nagent: subround ' + str(round) + ' / ' + str(subround))
+            #agent.fit(agent_gym, nb_episodes=10, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+            #agent.nb_steps_warmup = 0
+            #agent.test(agent_gym, nb_episodes=1, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
 
             print('\n\nenv: subround ' + str(round) + ' / ' + str(subround))
             env.fit(env_gym, nb_episodes=10, min_steps=100, visualize=False, verbose=2)
