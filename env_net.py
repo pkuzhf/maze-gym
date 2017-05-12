@@ -12,7 +12,7 @@ def get_env_net():
     m = config.Map.Width
     d = utils.Cell.CellSize
 
-    use_bn = True
+    use_bn =True
 
     observation = Input(shape=(1, m, n, d), name='observation_input')
     x = Reshape((m, n, d))(observation)
@@ -29,24 +29,19 @@ def get_env_net():
         #    x = BatchNormalization()(x)
         #x = Activation(activation='relu')(x)
 
-    #x = Conv2D(filters=1, kernel_size=(1, 1), padding='same')(x)
-    #if use_bn:
-    #    x = BatchNormalization()(x)
-    #x = Activation(activation='relu')(x)
-
     x = Flatten()(x)
-    #x = Dropout(0.5)(x)
+    #x = Dropout(0.2)(x)
 
-    #x = Dense(256)(x)
+    #x = Dense(512)(x)
     #if use_bn:
     #    x = BatchNormalization()(x)
     #x = Activation(activation='relu')(x)
-    #x = Dropout(0.5)(x)
+    #x = Dropout(0.1)(x)
 
     actions = Dense(m*n+1)(x)
 
-    env_net = Model(inputs=observation, outputs=actions, name='env')
+    env_model = Model(inputs=observation, outputs=actions, name='env')
 
     print('env model:')
-    print(env_net.summary())
-    return env_net
+    print(env_model.summary())
+    return env_model

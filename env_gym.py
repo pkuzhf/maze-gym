@@ -42,9 +42,11 @@ class ENV_GYM(gym.Env):
         self.invalid_count = 0
         self.conflict_count = 0
         self.mazemap = utils.initMazeMap()
-        self.mask = self._getmask(self.mazemap)
-        self.env.policy.set_mask(self.mask)
-        self.env.test_policy.set_mask(self.mask)
+
+        if 'Masked' in type(self.env.policy).__name__ or 'Masked' in type(self.env.test_policy).__name__:
+            self.mask = self._getmask(self.mazemap)
+            self.env.policy.set_mask(self.mask)
+            self.env.test_policy.set_mask(self.mask)
         return self.mazemap
 
     def _getmask(self, mazemap):
@@ -113,6 +115,8 @@ class ENV_GYM(gym.Env):
 
         self.gamestep += 1
         if done:
+            if self.conflict_count or self.invalid_count:
+                print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count))
             #self.reward_his.append(reward)
             #self.max_reward = max(self.max_reward, reward)
             #print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
@@ -124,7 +128,7 @@ class ENV_GYM(gym.Env):
 
     def _get_reward_from_agent(self, mazemap):
 
-        #return utils.Wall_count(mazemap)
+        #return self.Wall_count(mazemap)
         #return self.random_path(mazemap)
         #return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)

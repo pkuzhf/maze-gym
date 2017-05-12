@@ -60,6 +60,24 @@ def displayMap(mazemap):
         output += '\n'
     print output,
 
+def displayQvalue(qvalues):
+    if len(qvalues)==config.Map.Height*config.Map.Width+1:
+        idx = 0
+        output = ''
+        for i in range(config.Map.Height):
+            for j in range(config.Map.Width):
+                output += '%7.3f  '%(qvalues[idx])
+                idx += 1
+            if i==config.Map.Height-1:
+                output += '%7.3f  '%(qvalues[-1])
+            output += '\n'
+        print output,
+    else:
+        output = ''
+        for i in range(len(qvalues)):
+            output += '%7.3f  ' % (qvalues[i])
+        print(output)
+
 def remove(path):
     if os.path.exists(path):
         os.remove(path)
@@ -103,5 +121,7 @@ class qlogger(object):
 
         self.minq = 1e20
         self.maxq = -1e20
+        self.pre_minq = 1e20
+        self.pre_maxq = -1e20
         self.cur_minq = 1e20
         self.cur_maxq = 1e20

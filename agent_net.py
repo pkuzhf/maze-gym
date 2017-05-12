@@ -4,7 +4,6 @@ from keras.layers import Dense, Dropout, Flatten, Reshape, Activation, LeakyReLU
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, GlobalAveragePooling2D
 from keras.initializers import *
 
-
 def get_agent_net():
 
     n = config.Map.Height
@@ -28,19 +27,14 @@ def get_agent_net():
         #    x = BatchNormalization()(x)
         # x = Activation(activation='relu')(x)
 
-    # x = Conv2D(filters=1, kernel_size=(1, 1), padding='same')(x)
-    # if use_bn:
-    #    x = BatchNormalization()(x)
-    # x = Activation(activation='relu')(x)
-
     x = Flatten()(x)
-    # x = Dropout(0.5)(x)
+    #x = Dropout(0.2)(x)
 
-    # x = Dense(256)(x)
-    # if use_bn:
+    #x = Dense(256)(x)
+    #if use_bn:
     #    x = BatchNormalization()(x)
-    # x = Activation(activation='relu')(x)
-    # x = Dropout(0.5)(x)
+    #x = Activation(activation='relu')(x)
+    #x = Dropout(0.1)(x)
 
     actions = Dense(4)(x)
 
