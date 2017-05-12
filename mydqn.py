@@ -28,11 +28,13 @@ class myDQNAgent(DQNAgent):
 
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=10000)
+        self.total_step = 0
+
         self.qlogger = qlogger()
         self.policy.qlogger = self.qlogger
         self.test_policy.qlogger = self.qlogger
 
-    def fit(self, env, nb_episodes, action_repetition=1, callbacks=None, verbose=1,
+    def fit(self, env, nb_episodes, min_steps, action_repetition=1, callbacks=None, verbose=1,
             visualize=False, nb_max_start_steps=0, start_step_policy=None, log_interval=10000,
             nb_max_episode_steps=None):
         if not self.compiled:
@@ -71,7 +73,8 @@ class myDQNAgent(DQNAgent):
 
         self.step = 0
 
-        for episode in range(nb_episodes):
+        episode = 0
+        while episode<nb_episodes or self.step < min_steps:
 
             callbacks.on_episode_begin(episode)
             episode_step = 0
@@ -129,9 +132,11 @@ class myDQNAgent(DQNAgent):
                 'nb_episode_steps': episode_step,
                 'nb_steps': self.step,
                 'q_value': q_values[action],
-                'q_max': cur_maxq
+                'q_max': cur_maxq,
+                'q_mean': np.mean(self.qlogger.mean_maxq)
             }
             callbacks.on_episode_end(episode, episode_logs)
+            episode += 1
 
         callbacks.on_train_end(logs={'did_abort': False})
         self._on_train_end()

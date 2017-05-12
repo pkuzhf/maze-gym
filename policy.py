@@ -43,6 +43,7 @@ class Policy(object):
             if self.qlogger.maxq < self.qlogger.cur_maxq:
                 self.qlogger.maxq = self.qlogger.cur_maxq
 
+            self.qlogger.mean_maxq.append(self.qlogger.cur_maxq)
 
 class RandomPolicy(Policy):
 
