@@ -28,21 +28,26 @@ def draw_maze(mazemap, filename):
             hatch = None
             linewidth = 0
             linestyle = None
+            alpha = None
             if mazemap[i][j] == '0':
-                color = 'white'
-                linewidth = 0.1
+                color = 'yellow'
+                alpha = 0.5
+                linewidth = 0.5
                 linestyle = 'dotted'
             elif mazemap[i][j] == '1':
                 color = 'black'
             elif mazemap[i][j] == '2':
                 hatch = '/'
+                color = 'green'
             else:
                 hatch = '/'
+                color = 'red'
             p = patches.Rectangle((j / float(width), (height - i - 1) / float(height)), 1. / width, 1. / height,
                     facecolor = color,
                     linewidth = linewidth,
                     linestyle = linestyle,
-                    hatch = hatch
+                    hatch = hatch,
+                    alpha = alpha
                 )
             ax.add_patch(p)
 
