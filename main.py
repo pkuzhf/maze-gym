@@ -95,10 +95,10 @@ def run(agent, env, agent_gym, env_gym, task_name):
 
         for subround in range(100):
 
-            print('\n\nagent: subround ' + str(round) + ' / ' + str(subround))
-            agent.fit(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
-            agent.nb_steps_warmup = 0
-            agent.test(agent_gym, nb_episodes=1, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+            # print('\n\nagent: subround ' + str(round) + ' / ' + str(subround))
+            # agent.fit(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+            # agent.nb_steps_warmup = 0
+            # agent.test(agent_gym, nb_episodes=1, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
 
             print('\n\nenv: subround ' + str(round) + ' / ' + str(subround))
             env.fit(env_gym, nb_episodes=10, visualize=False, verbose=2)
@@ -106,11 +106,11 @@ def run(agent, env, agent_gym, env_gym, task_name):
             env.test(env_gym, nb_episodes=1, visualize=False, verbose=2)
 
         print('\n\nround test' + str(round) + '/' + str(nround))
-        agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
+        #agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=2)
         env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
 
         print('\n\nround save' + str(round) + '/' + str(nround))
-        agent.save_weights(model_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
+        #agent.save_weights(model_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
         env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
 
 
