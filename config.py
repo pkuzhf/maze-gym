@@ -21,11 +21,11 @@ class Training:
     RewardScaleTrain = 3
     RewardScaleTest = 1
 
-    EnvTrainEps = 0.1
-    EnvTrainEps_Min = 0.1
+    EnvTrainEps = 1.0
+    EnvTrainEps_Min = 0.2
     EnvTrainEps_HalfStep = 2000
     AgentTrainEps = 1.0
-    AgentTrainEps_Min = 0.1
+    AgentTrainEps_Min = 0.2
     AgentTrainEps_HalfStep = 2000
 
     EnvWarmup = 32
@@ -39,6 +39,6 @@ class Training:
 
 
 class Path:
-	Figs = './figs'
-	Logs = './logs'
-	Models = './models'
+    Figs = './figs'
+    Logs = './logs'
+    Models = './models'
