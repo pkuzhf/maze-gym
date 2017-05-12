@@ -130,7 +130,7 @@ class ENV_GYM(gym.Env):
 
         #return self.Wall_count(mazemap)
         #return self.random_path(mazemap)
-        #return self.shortest_path(mazemap)
+        return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)

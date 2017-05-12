@@ -21,8 +21,9 @@ from utils import qlogger, displayQvalue
 
 class myDQNAgent(DQNAgent):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name='', *args, **kwargs):
 
+        self.name = name
         super(myDQNAgent, self).__init__(*args, **kwargs)
 
         self.max_reward = -1e20
@@ -59,7 +60,7 @@ class myDQNAgent(DQNAgent):
         callbacks._set_env(env)
         params = {
             'nb_episodes': nb_episodes,
-            'name': self.model.name,
+            'name': self.name,
         }
         if hasattr(callbacks, 'set_params'):
             callbacks.set_params(params)
