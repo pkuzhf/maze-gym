@@ -30,13 +30,13 @@ def get_env_net():
         #x = Activation(activation='relu')(x)
 
     x = Flatten()(x)
-    x = Dropout(0.2)(x)
+    #x = Dropout(0.2)(x)
 
-    x = Dense(512)(x)
-    if use_bn:
-        x = BatchNormalization()(x)
-    x = Activation(activation='relu')(x)
-    x = Dropout(0.1)(x)
+    #x = Dense(512)(x)
+    #if use_bn:
+    #    x = BatchNormalization()(x)
+    #x = Activation(activation='relu')(x)
+    #x = Dropout(0.1)(x)
 
     actions = Dense(m*n+1)(x)
 

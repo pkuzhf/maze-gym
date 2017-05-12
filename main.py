@@ -44,8 +44,8 @@ def main():
 
     env_net = get_env_net()
     env_memory = SequentialMemory(limit=10000, window_length=1)
-
-    env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleTrain)), policyB=RandomPolicy(),
+    #BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleTrain))
+    env_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(),
         eps_forB=config.Training.EnvTrainEps, half_eps_step=config.Training.EnvTrainEps_HalfStep, eps_min=config.Training.EnvTrainEps_Min)
     env_test_policy = BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleTest))
 

@@ -17,15 +17,15 @@ class StrongMazeEnv:
 
 class Training:
     EnvEpsGen = 0.1
-    RewardScaleGen = 3
-    RewardScaleTrain = 3
+    RewardScaleGen = 1
+    RewardScaleTrain = 1
     RewardScaleTest = 1
 
     EnvTrainEps = 1.0
-    EnvTrainEps_Min = 0.2
+    EnvTrainEps_Min = 0.1
     EnvTrainEps_HalfStep = 2000
     AgentTrainEps = 1.0
-    AgentTrainEps_Min = 0.2
+    AgentTrainEps_Min = 0.1
     AgentTrainEps_HalfStep = 2000
 
     EnvWarmup = 32
