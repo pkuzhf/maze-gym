@@ -28,21 +28,26 @@ def draw_maze(mazemap, filename):
             hatch = None
             linewidth = 0
             linestyle = None
+            alpha = None
             if mazemap[i][j] == '0':
-                color = 'white'
-                linewidth = 0.1
+                color = 'yellow'
+                alpha = 0.5
+                linewidth = 0.5
                 linestyle = 'dotted'
             elif mazemap[i][j] == '1':
                 color = 'black'
             elif mazemap[i][j] == '2':
                 hatch = '/'
+                color = 'green'
             else:
                 hatch = '/'
+                color = 'red'
             p = patches.Rectangle((j / float(width), (height - i - 1) / float(height)), 1. / width, 1. / height,
                     facecolor = color,
                     linewidth = linewidth,
                     linestyle = linestyle,
-                    hatch = hatch
+                    hatch = hatch,
+                    alpha = alpha
                 )
             ax.add_patch(p)
 
@@ -53,21 +58,10 @@ def draw_maze(mazemap, filename):
 
 mazemap = [[2, 0], [1, 3]]
 
-def main():
-    filepath = sys.argv[1]
-    
-    idx = 0
-    if len(sys.argv) >= 3:
-        idx = int(sys.argv[2]) - 1
-    
-    filename = 'default'
-    if len(sys.argv) >= 4:
-        filename = sys.argv[3]
-    filename += '_' + time.strftime("%Y%m%d_%H%M%S")
-    
+def read_maze(filepath, idx):
     lines = open(filepath, 'r').readlines()
-    mazemap = []
     n = len(lines[idx]) - 1
+    mazemap = []
     for i in range(n):
         mazemap.append([])
         for j in range(n):
@@ -81,7 +75,30 @@ def main():
             elif c == 'T':
                 c = '3'
             mazemap[i].append(c)
-    print mazemap
+    return mazemap
+
+def main():
+    if len(sys.argv) == 1:
+        filepath = './logs/shortest_path_8x8.log'
+        idx = 28538
+        mazemap = read_maze(filepath, idx)
+        filename = 'default_' + time.strftime("%Y%m%d_%H%M%S")
+        draw_maze(mazemap, filename)
+        return
+
+    filepath = sys.argv[1]
+    
+    idx = 0
+    if len(sys.argv) >= 3:
+        idx = int(sys.argv[2]) - 1
+    
+    mazemap = read_maze(filepath, idx)
+
+    filename = 'default'
+    if len(sys.argv) >= 4:
+        filename = sys.argv[3]
+    filename += '_' + time.strftime("%Y%m%d_%H%M%S")
+    
     draw_maze(mazemap, filename)
 
 if __name__ == "__main__":
