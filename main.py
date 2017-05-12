@@ -86,8 +86,8 @@ def main():
 def run(agent, env, agent_gym, env_gym, task_name):
 
     nround = 1000
-    result_folder = 'result'
-    makedirs(result_folder)
+    model_folder = config.Path.Models
+    makedirs(model_folder)
 
     for round in range(nround):
 
@@ -110,8 +110,8 @@ def run(agent, env, agent_gym, env_gym, task_name):
         env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
 
         print('\n\nround save' + str(round) + '/' + str(nround))
-        agent.save_weights(result_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
-        env.save_weights(result_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
+        agent.save_weights(model_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
+        env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
 
 
 if __name__ == "__main__":

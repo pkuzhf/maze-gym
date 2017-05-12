@@ -37,3 +37,8 @@ class Training:
     EnvTargetModelUpdate = 1e-3
     AgentTargetModelUpdate = 1e-3
 
+
+class Path:
+	Figs = './figs'
+	Logs = './logs'
+	Models = './models'
