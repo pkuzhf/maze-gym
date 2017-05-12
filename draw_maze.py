@@ -58,7 +58,7 @@ def main():
     
     idx = 0
     if len(sys.argv) >= 3:
-        idx = int(sys.argv[2])
+        idx = int(sys.argv[2]) - 1
     
     filename = 'default'
     if len(sys.argv) >= 4:
