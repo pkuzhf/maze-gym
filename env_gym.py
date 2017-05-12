@@ -130,12 +130,13 @@ class ENV_GYM(gym.Env):
 
         #return self.Wall_count(mazemap)
         #return self.random_path(mazemap)
-        return self.shortest_path(mazemap)
+        #return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
-        return self.rightdownupleft_path(mazemap)
+        #return self.rightdownupleft_path(mazemap)
         #return self.rightdown_random_path(mazemap)
         #return self.dfs_path(mazemap)
+        return self.right_hand_path(mazemap)
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.agent = self.agent
@@ -232,6 +233,38 @@ class ENV_GYM(gym.Env):
         #    print('error')
 
         return shortest_path[tx][ty]
+
+    def right_hand_path(self, mazemap):
+
+        [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
+        if sx == -1 or sy == -1 or tx == -1 or ty == -1:
+            return -1
+
+        mazemap[sx, sy] = utils.Cell.EmptyV
+
+        count = 0
+        cx, cy = sx, sy
+        utils.displayMap(mazemap)
+
+        cur_dir = 0
+        dirs = np.array([[1, 0], [0, -1], [-1, 0], [0, 1]])
+        p = [1, 0, 3, 2]
+        while cx != tx or cy != ty:
+            for i in p:
+                next_dir = (cur_dir + i) % 4
+                nx, ny = [cx, cy] + dirs[next_dir]
+                if utils.inMap(nx, ny):
+                    if mazemap[nx,ny,utils.Cell.Empty] or mazemap[nx,ny,utils.Cell.Target] :
+                        cx, cy = nx, ny
+                        cur_dir = next_dir
+                        break
+            count += 1
+            print(cx, cy)
+
+        mazemap[sx, sy] = utils.Cell.SourceV
+
+        return count
+
 
     def shortest_random_path(self, mazemap):
 
