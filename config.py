@@ -36,3 +36,8 @@ class Training:
 
     AgentTestEps = 0.0
     EnvGenEps = 0.1
+
+class Path:
+	Figs = './figs'
+	Logs = './logs'
+	Models = './models'
