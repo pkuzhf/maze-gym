@@ -22,14 +22,14 @@ class Training:
     RewardScaleTest = 1
 
     EnvTrainEps = 1.0
-    EnvTrainEps_Min = 0.1
-    EnvTrainEps_HalfStep = 2000
+    EnvTrainEps_Min = 0.2
+    EnvTrainEps_HalfStep = 10000
     AgentTrainEps = 1.0
     AgentTrainEps_Min = 0.1
     AgentTrainEps_HalfStep = 2000
 
-    EnvWarmup = 32
-    AgentWarmup = 32
+    EnvWarmup = 100
+    AgentWarmup = 100
 
     EnvLearningRate = 1e-4
     AgentLearningRate = 1e-4

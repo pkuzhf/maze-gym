@@ -3,6 +3,7 @@ import config
 import os
 from keras.layers import Layer
 import tensorflow as tf
+from collections import deque
 
 # right, down, up, left
 dirs = np.array([[0, 1], [1, 0], [-1, 0], [0, -1]])
@@ -125,3 +126,4 @@ class qlogger(object):
         self.pre_maxq = -1e20
         self.cur_minq = 1e20
         self.cur_maxq = 1e20
+        self.mean_maxq = deque(maxlen=10000)
