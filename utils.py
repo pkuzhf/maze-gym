@@ -126,4 +126,4 @@ class qlogger(object):
         self.pre_maxq = -1e20
         self.cur_minq = 1e20
         self.cur_maxq = 1e20
-        self.mean_maxq = deque(maxlen=10000)
+        self.mean_maxq = deque(maxlen=1000)

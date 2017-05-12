@@ -43,7 +43,7 @@ def main():
     env_gym.seed(config.Game.Seed)
 
     env_net = get_env_net()
-    env_memory = SequentialMemory(limit=10000, window_length=1)
+    env_memory = SequentialMemory(limit=1000, window_length=1)
     #BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleTrain))
     env_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(),
         eps_forB=config.Training.EnvTrainEps, half_eps_step=config.Training.EnvTrainEps_HalfStep, eps_min=config.Training.EnvTrainEps_Min)
@@ -53,12 +53,13 @@ def main():
         enable_dueling_network=True, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
-    agent_env_policy = EpsABPolicy(policyA=BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleGen)), policyB=RandomPolicy(), eps_forB=config.Training.EnvEpsGen)
+    agent_env_policy = env_policy
+    #EpsABPolicy(policyA=BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleGen)), policyB=RandomPolicy(), eps_forB=config.Training.EnvEpsGen)
     agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, agent_env_policy)
     agent_gym.seed(config.Game.Seed)
 
     agent_net = get_agent_net()
-    agent_memory = SequentialMemory(limit=10000, window_length=1)
+    agent_memory = SequentialMemory(limit=1000, window_length=1)
 
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
         half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
@@ -76,11 +77,27 @@ def main():
     print(vars(config.Map))
     print(vars(config.Training))
 
-    run(agent, env, agent_gym, env_gym, task_name)
+    #run(agent, env, agent_gym, env_gym, task_name)
+    run_env_path(env, env_gym, task_name)
 
     print(argv)
     print(vars(config.Map))
     print(vars(config.Training))
+
+
+def run_env_path(env, env_gym, task_name):
+
+    nround = 1000
+    model_folder = config.Path.Models
+    makedirs(model_folder)
+
+    for round in range(nround):
+
+        print('\n\nround train' + str(round) + '/' + str(nround))
+        env.fit(env_gym, nb_episodes=100, min_steps=100, visualize=False, verbose=2)
+        env.nb_steps_warmup = 0
+        env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
+        env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
 
 
 def run(agent, env, agent_gym, env_gym, task_name):

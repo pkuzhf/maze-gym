@@ -35,7 +35,7 @@ class ENV_GYM(gym.Env):
         self.invalid_count = 0
         self.conflict_count = 0
         self.max_reward = -1e20
-        self.reward_his = deque(maxlen=10000)
+        self.reward_his = deque(maxlen=1000)
 
     def _reset(self):
         self.gamestep = 0
@@ -130,7 +130,7 @@ class ENV_GYM(gym.Env):
 
         #return self.Wall_count(mazemap)
         #return self.random_path(mazemap)
-        #return self.shortest_path(mazemap)
+        return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
@@ -198,7 +198,8 @@ class ENV_GYM(gym.Env):
 
         return False
 
-    def shortest_path(self, mazemap):
+    @staticmethod
+    def shortest_path(mazemap):
 
         [sx, sy, tx, ty] = utils.findSourceAndTarget(mazemap)
         if sx == -1 or sy == -1 or tx == -1 or ty == -1:

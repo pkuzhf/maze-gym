@@ -27,7 +27,7 @@ class myDQNAgent(DQNAgent):
         super(myDQNAgent, self).__init__(*args, **kwargs)
 
         self.max_reward = -1e20
-        self.reward_his = deque(maxlen=10000)
+        self.reward_his = deque(maxlen=1000)
         self.total_step = 0
 
         self.qlogger = qlogger()

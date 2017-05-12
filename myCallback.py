@@ -55,7 +55,7 @@ class myTrainEpisodeLogger(Callback):
         self.dqn.total_step += self.step
 
         template = '{name} episode: {episode}, step: {episode_steps}, ' \
-                   'max reward: {max_reward:.2f}, avg reward: {average_reward:.2f}, cur reward {episode_reward:.2f}, '\
+                   'max reward: {max_reward:.2f}, avg reward: {average_reward_his:.2f}, cur reward {episode_reward:.2f}, '\
                    'cur qvalue: {curq:.3f}, max qvalue: {cur_maxq:.3f}, avg qvalue: {mean_maxq:.3f}, eps: {eps:.3f}, ' \
                    'steps per second: {sps:.1f}, duration: {duration:.3f}s, {metrics}, '\
                    'mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}], ' \
@@ -65,13 +65,13 @@ class myTrainEpisodeLogger(Callback):
             'name': self.params['name'],
             'episode': episode + 1,
             'episode_step': self.step,
-            'total_step': self.step,
+            'total_step': self.dqn.total_step,
             'duration': duration,
             'episode_steps': episode_steps,
             'eps': self.dqn.policy.eps_forB,
             'sps': float(episode_steps) / duration,
             'episode_reward': episode_reward,
-            'average_reward': np.mean(self.dqn.reward_his),
+            'average_reward_his': np.mean(self.dqn.reward_his),
             'max_reward': np.max(self.dqn.reward_his),
             'maxm_reward': self.dqn.max_reward,
             'metrics': metrics_text,
