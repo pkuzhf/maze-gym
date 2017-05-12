@@ -53,9 +53,11 @@ class myTrainEpisodeLogger(Callback):
         self.dqn.reward_his.append(episode_reward)
         self.dqn.max_reward = max(self.dqn.max_reward, episode_reward)
 
-        template = '{name} episode: {episode}, step: {episode_steps}, reward: cur {episode_reward:.2f}, avg {average_reward:.2f}, max {max_reward:.2f}, ' \
-                   '{metrics}, qvalue: [{curminq:.3f}, {curmaxq:.3f}] / [{minq:.3f}, {maxq:.3f}] steps per second: {sps:.0f}, duration: {duration:.3f}s, ' \
-                   'mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}], total step {step}'
+        template = '{name} episode: {episode}, step: {episode_steps}, avg reward: {average_reward:.2f}, cur reward {episode_reward:.2f}, '\
+                   'cur qvalue: {curq:.3f}, max qvalue: {curmaxq:.3f}, eps: {eps:.3f}, ' \
+                   'steps per second: {sps:.1f}, duration: {duration:.3f}s, {metrics}, '\
+                   'mean reward: {reward_mean:.3f} [{reward_min:.3f}, {reward_max:.3f}], mean action: {action_mean:.3f} [{action_min:.3f}, {action_max:.3f}], ' \
+                   'total step: {step}, max reward: {max_reward:.2f}'
 
         variables = {
             'name': self.params['name'],
@@ -63,15 +65,14 @@ class myTrainEpisodeLogger(Callback):
             'step': self.step,
             'duration': duration,
             'episode_steps': episode_steps,
+            'eps': self.dqn.policy.eps_forB,
             'sps': float(episode_steps) / duration,
             'episode_reward': episode_reward,
             'average_reward': np.mean(self.dqn.reward_his),
             'max_reward': self.dqn.max_reward,
             'metrics': metrics_text,
-            'curmaxq': self.dqn.qlogger.cur_maxq,
-            'maxq': self.dqn.qlogger.maxq,
-            'curminq': self.dqn.qlogger.cur_minq,
-            'minq': self.dqn.qlogger.minq,
+            'curq': logs['q_value'], #self.dqn.qlogger.pre_minq,
+            'curmaxq': logs['q_max'], #self.dqn.qlogger.pre_maxq,
             'reward_mean': np.mean(self.rewards[episode]),
             'reward_min': np.min(self.rewards[episode]),
             'reward_max': np.max(self.rewards[episode]),

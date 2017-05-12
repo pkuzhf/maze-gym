@@ -33,17 +33,12 @@ class Policy(object):
 
         if self.qlogger is not None:
 
-            if np.isnan(q_values).any():
-                print(q_values)
-
             if self.mask is not None:
-                q_values = q_values * (1-self.mask)
+                q_values = q_values - self.mask * 1e20
 
-            self.qlogger.cur_minq = np.min(q_values)
+            self.qlogger.pre_maxq = self.qlogger.cur_maxq
+
             self.qlogger.cur_maxq = np.max(q_values)
-
-            if self.qlogger.minq > self.qlogger.cur_minq:
-                self.qlogger.minq = self.qlogger.cur_minq
 
             if self.qlogger.maxq < self.qlogger.cur_maxq:
                 self.qlogger.maxq = self.qlogger.cur_maxq
@@ -52,7 +47,7 @@ class Policy(object):
 class RandomPolicy(Policy):
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         nb_actions = q_values.shape[0]
         action = np.random.random_integers(0, nb_actions - 1)
@@ -66,7 +61,7 @@ class BoltzmannQPolicy(Policy):
         self.tau = tau
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         nb_actions = q_values.shape[0]
         q_values = q_values.astype('float64')
@@ -87,7 +82,7 @@ class BoltzmannQPolicy(Policy):
 class GreedyQPolicy(Policy):
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         action = np.argmax(q_values)
         return action
@@ -100,7 +95,7 @@ class MaskedRandomPolicy(Policy):
         self.mask = None
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         nb_actions = q_values.shape[0]
         probs = np.ones(nb_actions)
@@ -127,7 +122,7 @@ class MaskedBoltzmannQPolicy(Policy):
         self.mask = None
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         nb_actions = q_values.shape[0]
         q_values = q_values.astype('float64')
@@ -154,7 +149,7 @@ class MaskedGreedyQPolicy(Policy):
         self.mask = None
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         if self.mask is not None:
             q_values -= self.mask * 1e20
@@ -176,7 +171,7 @@ class EpsABPolicy(Policy):
             self.eps_decay_rate_each_step = np.power(0.5, 1.0/half_eps_step)
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         if np.random.uniform() < self.eps_forB:
             action = self.policyB.select_action(q_values)
@@ -215,7 +210,7 @@ class EpsABCPolicy(Policy):
             self.eps_decay_rate_each_step = np.power(0.5, 1.0 / half_eps_step)
 
     def select_action(self, q_values):
-        self.log_qvalue(q_values)
+        #self.log_qvalue(q_values)
         assert q_values.ndim == 1
         rand = np.random.uniform()
         if rand < self.eps_forC:

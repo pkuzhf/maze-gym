@@ -17,7 +17,7 @@ from rl.keras_future import Model
 from rl.agents.dqn import DQNAgent
 from myCallback import myTrainEpisodeLogger
 from collections import deque
-from utils import qlogger
+from utils import qlogger, displayQvalue
 
 class myDQNAgent(DQNAgent):
 
@@ -81,7 +81,12 @@ class myDQNAgent(DQNAgent):
             while True:
 
                 callbacks.on_step_begin(episode_step)
-                action = self.forward(observation)
+
+                q_values = self.compute_q_values([observation])  # only for windows 1
+                action = self.policy.select_action(q_values=q_values)
+
+                self.recent_observation = observation
+                self.recent_action = action
 
                 callbacks.on_action_begin(action)
                 observation, reward, done, info = env.step(action)
@@ -107,6 +112,13 @@ class myDQNAgent(DQNAgent):
                 self.step += 1
 
                 if done:
+                    self.policy.log_qvalue(q_values)
+                    cur_maxq = self.qlogger.cur_maxq
+                    if self.policy.mask is not None:
+                        displayQvalue(q_values)#*(1-self.policy.mask))
+                    else:
+                        displayQvalue(q_values)
+
                     self.forward(observation)
                     self.backward(0., terminal=False)
                     break
@@ -115,6 +127,8 @@ class myDQNAgent(DQNAgent):
                 'episode_reward': episode_reward,
                 'nb_episode_steps': episode_step,
                 'nb_steps': self.step,
+                'q_value': q_values[action],
+                'q_max': cur_maxq
             }
             callbacks.on_episode_end(episode, episode_logs)
 
