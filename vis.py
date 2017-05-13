@@ -7,6 +7,8 @@
 import numpy as np
 import pandas as pd
 import json
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot  as plt
 import glob
 import seaborn as sns
@@ -14,7 +16,7 @@ import seaborn as sns
 
 # In[43]:
 
-log_path = './logs/dfs.20170513_204108.log'
+log_path = './logs/20170512_183854.shortest_path_5x5.log'
 procesed_log_path = log_path.replace('.log', '.processed.log')
 fig_path = log_path.replace('.log', '.pdf')
 is_env = True
