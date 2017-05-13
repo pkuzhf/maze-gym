@@ -13,7 +13,7 @@ class AGENT_GYM(gym.Env):
 
     def __init__(self, ini_mazemap=None):
 
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(config.Game.AgentAction)
         t = ()
         for i in range(config.Map.Height * config.Map.Width):
             t += (spaces.Discrete(4),)
@@ -40,22 +40,35 @@ class AGENT_GYM(gym.Env):
         done = False
         reward = -1
 
-        new_source = self.source + utils.dirs[action]
+        if action == 4:
 
-        if utils.inMap(new_source[0], new_source[1]):
+            new_source = [np.random.random_integers(0, config.Map.Height-1), np.random.random_integers(0, config.Map.Width-1)]
 
             if self.mazemap[new_source[0], new_source[1], utils.Cell.Target]:
                 done = True
                 self.mazemap[self.source[0], self.source[1]] = utils.Cell.EmptyV
                 self.mazemap[new_source[0], new_source[1]] = utils.Cell.SourceV
                 self.source = new_source
-                #utils.displayMap(self.mazemap)
+                # utils.displayMap(self.mazemap)
 
-            if self.mazemap[new_source[0], new_source[1], utils.Cell.Empty]:
-                self.mazemap[self.source[0], self.source[1]] = utils.Cell.EmptyV
-                self.mazemap[new_source[0], new_source[1]] = utils.Cell.SourceV
-                self.source = new_source
-                #utils.displayMap(self.mazemap)
+        else:
+
+            new_source = self.source + utils.dirs[action]
+
+            if utils.inMap(new_source[0], new_source[1]):
+
+                if self.mazemap[new_source[0], new_source[1], utils.Cell.Target]:
+                    done = True
+                    self.mazemap[self.source[0], self.source[1]] = utils.Cell.EmptyV
+                    self.mazemap[new_source[0], new_source[1]] = utils.Cell.SourceV
+                    self.source = new_source
+                    #utils.displayMap(self.mazemap)
+
+                if self.mazemap[new_source[0], new_source[1], utils.Cell.Empty]:
+                    self.mazemap[self.source[0], self.source[1]] = utils.Cell.EmptyV
+                    self.mazemap[new_source[0], new_source[1]] = utils.Cell.SourceV
+                    self.source = new_source
+                    #utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 

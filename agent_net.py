@@ -36,7 +36,7 @@ def get_agent_net():
     #x = Activation(activation='relu')(x)
     #x = Dropout(0.1)(x)
 
-    actions = Dense(4)(x)
+    actions = Dense(config.Game.AgentAction)(x)
 
     agent_model = Model(inputs=observation, outputs=actions, name='agent')
 

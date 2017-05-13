@@ -50,9 +50,6 @@ class myTrainEpisodeLogger(Callback):
         metrics_text = metrics_template.format(*metrics_variables)
 
         episode_reward = np.sum(self.rewards[episode])
-        self.dqn.reward_his.append(episode_reward)
-        self.dqn.max_reward = max(self.dqn.max_reward, episode_reward)
-        self.dqn.total_step += self.step
 
         template = '{name} episode: {episode}, step: {episode_steps}, ' \
                    'max reward: {max_reward:.2f}, avg reward: {average_reward_his:.2f}, cur reward {episode_reward:.2f}, '\

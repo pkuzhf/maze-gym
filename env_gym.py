@@ -108,21 +108,27 @@ class ENV_GYM(gym.Env):
         done, conflict, invalid = self._act(self.mazemap, action, self.mask)
 
         if done:
+
             mazemap = copy.deepcopy(self.mazemap)
             reward = self._get_reward_from_agent(mazemap)
+
+            if self.conflict_count or self.invalid_count:
+                print(
+                'env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count))
+
+            utils.displayMap(self.mazemap)
+            print('agent rewards: ' + utils.string_values(self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
+
+            # self.reward_his.append(reward)
+            # self.max_reward = max(self.max_reward, reward)
+            # print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
+            #      'minq', '%0.2f / %0.2f' % (self.qlogger.cur_minq, self.qlogger.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.qlogger.cur_maxq-reward, self.qlogger.cur_maxq, self.qlogger.maxq),
+            #      'eps', '%0.2f / %0.2f' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
+
         else:
             reward = 0
 
         self.gamestep += 1
-        if done:
-            if self.conflict_count or self.invalid_count:
-                print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count))
-            #self.reward_his.append(reward)
-            #self.max_reward = max(self.max_reward, reward)
-            #print('env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count), 'reward', '%0.2f / %0.2f' % (reward, self.max_reward), 'avg_r', '%0.2f' % np.mean(self.reward_his),
-            #      'minq', '%0.2f / %0.2f' % (self.qlogger.cur_minq, self.qlogger.minq), 'maxq', '%0.2f : %0.2f / %0.2f ' % (self.qlogger.cur_maxq-reward, self.qlogger.cur_maxq, self.qlogger.maxq),
-            #      'eps', '%0.2f / %0.2f' % (self.env.policy.eps_forB, self.env.policy.eps_forC))
-            utils.displayMap(self.mazemap)
 
         return self.mazemap, reward, done, {}
 
@@ -130,7 +136,7 @@ class ENV_GYM(gym.Env):
 
         #return self.Wall_count(mazemap)
         #return self.random_path(mazemap)
-        return self.shortest_path(mazemap)
+        #return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
@@ -142,17 +148,30 @@ class ENV_GYM(gym.Env):
         agent_gym.agent = self.agent
         agent_gym.reset()
 
-        gamestep = 0
-        reward_episode = 0
-        while gamestep < config.Game.MaxGameStep:
-            gamestep += 1
-            action = self.agent.forward(agent_gym.mazemap)
-            obs, reward, done, info = agent_gym.step(action)
-            reward_episode += reward
-            if done:
-                break
-
-        return -reward_episode
+        fit_this_map = True
+        if fit_this_map:
+            self.agent.max_reward = -1e20
+            self.agent.reward_his.clear()
+            self.agent.memory.__init__(10000, window_length=1)
+            # we do not reset the agent network, to accelerate the training.
+            self.agent.fit(agent_gym, nb_episodes=10, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
+            if config.Game.AgentAction == 4:
+                return self.agent.max_reward
+            else: #return np.mean(self.agent.reward_his[:-10])
+                self.agent.test_reward_his.clear()
+                self.agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
+                return np.mean(self.agent.test_reward_his)
+        else:
+            gamestep = 0
+            reward_episode = 0
+            while gamestep < config.Game.MaxGameStep:
+                gamestep += 1
+                action = self.agent.forward(agent_gym.mazemap)
+                obs, reward, done, info = agent_gym.step(action)
+                reward_episode += reward
+                if done:
+                    break
+            return -reward_episode
 
     def rollout_env_map(self, mazemap=None, policy=None): #mazemap and policy state might get change
 

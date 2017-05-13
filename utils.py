@@ -127,3 +127,9 @@ class qlogger(object):
         self.cur_minq = 1e20
         self.cur_maxq = 1e20
         self.mean_maxq = deque(maxlen=1000)
+
+def string_values(list, format='%.3f '):
+    output = ''
+    for x in list:
+        output += format % x
+    return output

@@ -1,10 +1,11 @@
 class Game:
     Seed = 123456
     MaxGameStep = 200
+    AgentAction = 5
 
 class Map:
-    Height = 10
-    Width = 10
+    Height = 4
+    Width = 4
     WallDense = 0.
 
 class Generator:
