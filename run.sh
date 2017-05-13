@@ -1,6 +1,6 @@
 #!/bin/bash
 t=`date "+%Y%m%d_%H%M%S"`
-task_name=$t.$1
+task_name=$1.$t
 
 if [ $# -eq 3 ]
 then

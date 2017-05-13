@@ -130,13 +130,13 @@ class ENV_GYM(gym.Env):
 
         #return self.Wall_count(mazemap)
         #return self.random_path(mazemap)
-        #return self.shortest_path(mazemap)
+        return self.shortest_path(mazemap)
         #return self.shortest_random_path(mazemap)
         #return self.rightdown_path(mazemap)
         #return self.rightdownupleft_path(mazemap)
         #return self.rightdown_random_path(mazemap)
         #return self.dfs_path(mazemap)
-        return self.right_hand_path(mazemap)
+        #return self.right_hand_path(mazemap)
 
         agent_gym = AGENT_GYM(mazemap)
         agent_gym.agent = self.agent
@@ -232,7 +232,7 @@ class ENV_GYM(gym.Env):
         #    utils.displayMap(mazemap)
         #    print('error')
 
-        return shortest_path[tx][ty]
+        return shortest_path[tx][ty]-1
 
     def right_hand_path(self, mazemap):
 
@@ -244,7 +244,7 @@ class ENV_GYM(gym.Env):
 
         count = 0
         cx, cy = sx, sy
-        utils.displayMap(mazemap)
+        path = []
 
         cur_dir = 0
         dirs = np.array([[1, 0], [0, -1], [-1, 0], [0, 1]])
@@ -259,9 +259,11 @@ class ENV_GYM(gym.Env):
                         cur_dir = next_dir
                         break
             count += 1
-            print(cx, cy)
+            path.append([cx, cy])
 
         mazemap[sx, sy] = utils.Cell.SourceV
+
+        print(count, path)
 
         return count
 

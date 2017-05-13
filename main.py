@@ -53,25 +53,25 @@ def main():
         enable_dueling_network=True, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
-    agent_env_policy = env_policy
+    #agent_env_policy = env_policy
     #EpsABPolicy(policyA=BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleGen)), policyB=RandomPolicy(), eps_forB=config.Training.EnvEpsGen)
-    agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, agent_env_policy)
-    agent_gym.seed(config.Game.Seed)
+    #agent_gym = ADVERSARIAL_AGENT_GYM(env_gym, agent_env_policy)
+    #agent_gym.seed(config.Game.Seed)
 
-    agent_net = get_agent_net()
-    agent_memory = SequentialMemory(limit=10000, window_length=1)
+    #agent_net = get_agent_net()
+    #agent_memory = SequentialMemory(limit=10000, window_length=1)
 
-    agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
-        half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
-    agent_test_policy = GreedyQPolicy()
+    #agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
+    #    half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
+    #agent_test_policy = GreedyQPolicy()
 
-    agent = mDQN(name='agent', model=agent_net, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
-        enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
-    agent.compile(Adam(lr=config.Training.AgentLearningRate))
+    #agent = mDQN(name='agent', model=agent_net, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
+    #    enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
+    #agent.compile(Adam(lr=config.Training.AgentLearningRate))
 
     env_gym.env = env
-    env_gym.agent = agent
-    agent_gym.agent = agent
+    #env_gym.agent = agent
+    #agent_gym.agent = agent
 
     print(argv)
     print(vars(config.Map))
@@ -89,7 +89,10 @@ def run_env_path(env, env_gym, task_name):
 
     nround = 1000
     model_folder = config.Path.Models
+
     makedirs(model_folder)
+    makedirs(config.Path.Logs)
+    makedirs(config.Path.Figs)
 
     for round in range(nround):
 
