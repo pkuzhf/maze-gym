@@ -1,7 +1,7 @@
 class Game:
     Seed = 123456
     MaxGameStep = 200
-    AgentAction = 5
+    AgentAction = 4
 
 class Map:
     Height = 4

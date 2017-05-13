@@ -156,11 +156,11 @@ class ENV_GYM(gym.Env):
             # we do not reset the agent network, to accelerate the training.
             self.agent.fit(agent_gym, nb_episodes=10, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
             if config.Game.AgentAction == 4:
-                return self.agent.max_reward
+                return -self.agent.max_reward
             else: #return np.mean(self.agent.reward_his[:-10])
                 self.agent.test_reward_his.clear()
                 self.agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
-                return np.mean(self.agent.test_reward_his)
+                return -np.mean(self.agent.test_reward_his)
         else:
             gamestep = 0
             reward_episode = 0
