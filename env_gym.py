@@ -37,6 +37,8 @@ class ENV_GYM(gym.Env):
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=1000)
 
+        self.used_agent = False
+
     def _reset(self):
         self.gamestep = 0
         self.invalid_count = 0
@@ -117,7 +119,9 @@ class ENV_GYM(gym.Env):
                 'env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count))
 
             utils.displayMap(self.mazemap)
-            print('agent rewards: ' + utils.string_values(self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
+
+            if self.used_agent:
+                print('agent rewards: ' + utils.string_values(self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
 
             # self.reward_his.append(reward)
             # self.max_reward = max(self.max_reward, reward)
@@ -134,44 +138,58 @@ class ENV_GYM(gym.Env):
 
     def _get_reward_from_agent(self, mazemap):
 
-        #return self.Wall_count(mazemap)
-        #return self.random_path(mazemap)
-        #return self.shortest_path(mazemap)
-        #return self.shortest_random_path(mazemap)
-        #return self.rightdown_path(mazemap)
-        #return self.rightdownupleft_path(mazemap)
-        #return self.rightdown_random_path(mazemap)
-        #return self.dfs_path(mazemap)
-        #return self.right_hand_path(mazemap)
+        # return self.Wall_count(mazemap)
+        # return self.random_path(mazemap)
+        # return self.shortest_random_path(mazemap)
+        # return self.rightdown_path(mazemap)
+        # return self.rightdownupleft_path(mazemap)
+        # return self.rightdown_random_path(mazemap)
 
-        agent_gym = AGENT_GYM(mazemap)
-        agent_gym.agent = self.agent
-        agent_gym.reset()
-
-        fit_this_map = True
-        if fit_this_map:
-            self.agent.max_reward = -1e20
-            self.agent.reward_his.clear()
-            self.agent.memory.__init__(10000, window_length=1)
-            # we do not reset the agent network, to accelerate the training.
-            self.agent.fit(agent_gym, nb_episodes=10, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
-            if config.Game.AgentAction == 4:
-                return -self.agent.max_reward
-            else: #return np.mean(self.agent.reward_his[:-10])
-                self.agent.test_reward_his.clear()
-                self.agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
-                return -np.mean(self.agent.test_reward_his)
+        if 'dfs' in config.Game.Type:
+            return self.dfs_path(mazemap)
+        elif 'right_hand' in config.Game.Type:
+            return self.right_hand_path(mazemap)
+        elif 'shortest' in config.Game.Type:
+            return self.shortest_path(mazemap)
         else:
-            gamestep = 0
-            reward_episode = 0
-            while gamestep < config.Game.MaxGameStep:
-                gamestep += 1
-                action = self.agent.forward(agent_gym.mazemap)
-                obs, reward, done, info = agent_gym.step(action)
-                reward_episode += reward
-                if done:
-                    break
-            return -reward_episode
+
+            if 'dqn' not in config.Game.Type:
+                print('taskname should be dfs, right_hand, shortest, dqn or dqn5')
+                assert False
+
+            self.used_agent = True
+
+            agent_gym = AGENT_GYM(mazemap)
+            agent_gym.agent = self.agent
+            agent_gym.reset()
+
+            fit_this_map = True
+            if fit_this_map:
+                self.agent.max_reward = -1e20
+                self.agent.reward_his.clear()
+                self.agent.memory.__init__(10000, window_length=1)
+                # we do not reset the agent network, to accelerate the training.
+                self.agent.fit(agent_gym, nb_episodes=20, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
+                if config.Game.AgentAction == 4:
+                    return -self.agent.max_reward
+                else: #return np.mean(self.agent.reward_his[:-10])
+                    self.agent.test_reward_his.clear()
+                    self.agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
+                    return -np.mean(self.agent.test_reward_his)
+            else:
+                gamestep = 0
+                reward_episode = 0
+                while gamestep < config.Game.MaxGameStep:
+                    gamestep += 1
+                    action = self.agent.forward(agent_gym.mazemap)
+                    obs, reward, done, info = agent_gym.step(action)
+                    reward_episode += reward
+                    if done:
+                        break
+                return -reward_episode
+
+        assert False
+        return 0
 
     def rollout_env_map(self, mazemap=None, policy=None): #mazemap and policy state might get change
 

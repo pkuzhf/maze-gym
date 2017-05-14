@@ -18,8 +18,8 @@ from policy import *
 from mydqn import myDQNAgent as mDQN
 from rl.memory import SequentialMemory
 
-import keras.backend.tensorflow_backend as KTF
-KTF.set_session(get_session())
+#import keras.backend.tensorflow_backend as KTF
+#KTF.set_session(get_session())
 
 def main():
 
@@ -32,6 +32,11 @@ def main():
         task_name = sys.argv[1]
     else:
         task_name = 'default'
+
+    if 'dqn5' in task_name:
+        config.Game.AgentAction = 5
+
+    config.Game.Type = task_name
 
     if len(sys.argv) >= 4:
         config.Map.Height = int(sys.argv[2])
