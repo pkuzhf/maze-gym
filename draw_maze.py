@@ -78,12 +78,18 @@ def read_maze(filepath, idx):
     return mazemap
 
 def main():
+    # args: filepath, line number (start from 1), outputfilename
     if len(sys.argv) == 1:
-        filepath = './logs/shortest_path_8x8.log'
-        idx = 28538
-        mazemap = read_maze(filepath, idx)
-        filename = 'default_' + time.strftime("%Y%m%d_%H%M%S")
-        draw_maze(mazemap, filename)
+        args = [
+            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_500_68'], 
+            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_1500_68'],             
+            ['./logs/20170512_190434.dfs_path_8x8.log', 490617, 'dfs_8x8_2500_58'], 
+            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_3500_68'], 
+            ['./logs/20170512_190434.dfs_path_8x8.log', 887786, 'dfs_8x8_4500_86']
+        ]
+        for [filepath, idx, outputname] in args:
+            mazemap = read_maze(filepath, idx - 1)
+            draw_maze(mazemap, outputname)
         return
 
     filepath = sys.argv[1]
@@ -94,10 +100,10 @@ def main():
     
     mazemap = read_maze(filepath, idx)
 
-    filename = 'default'
     if len(sys.argv) >= 4:
         filename = sys.argv[3]
-    filename += '_' + time.strftime("%Y%m%d_%H%M%S")
+    else:
+        filename += 'default_' + time.strftime("%Y%m%d_%H%M%S")
     
     draw_maze(mazemap, filename)
 
