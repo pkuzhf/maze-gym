@@ -17,9 +17,10 @@ import seaborn as sns
 
 # In[90]:
 
-log_path = './logs/dfs.20170513_204108.log'
+filename = '20170513_003442.dfs_path_5x5.log'
+log_path = './logs/' + filename 
 procesed_log_path = log_path.replace('.log', '.processed.log')
-fig_path = log_path.replace('.log', '.pdf')
+fig_path = './figs/' + filename.replace('.log', '.pdf')
 is_env = True
 test_log_begin = False
 is_map_begin = False
