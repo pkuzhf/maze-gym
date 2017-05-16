@@ -81,6 +81,26 @@ def main():
     # args: filepath, line number (start from 1), outputfilename
     if len(sys.argv) == 1:
         args = [
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 50, 'rh_8x8_1_14'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 100200, 'rh_8x8_5000_18'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 200632, 'rh_8x8_10000_26'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 301103, 'rh_8x8_15000_36'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 401515, 'rh_8x8_20000_38'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 602361, 'rh_8x8_30000_48'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 803204, 'rh_8x8_40000_58'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 1004133, 'rh_8x8_50000_70'],
+            ['./logs/right_hand_path_8x8.20170513_112822.log', 1204870, 'rh_8x8_60000_74'],
+
+            ['./logs/env_dqn_8x8.20170513_115847.log', 443, 'dqn_8x8_1_14'],
+            #['./logs/env_dqn_8x8.20170513_115847.log', 11819, 'dqn_8x8_500_14'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 21917, 'dqn_8x8_1000_19'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 31629, 'dqn_8x8_1500_200'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 42037, 'dqn_8x8_2000_59'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 82366, 'dqn_8x8_4000_30'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 122473, 'dqn_8x8_6000_69'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 162730, 'dqn_8x8_8000_87'],
+            ['./logs/env_dqn_8x8.20170513_115847.log', 202867, 'dqn_8x8_10000_87'],
+
             ['./logs/20170512_190434.dfs_path_8x8.log', 87, 'dfs_8x8_1_17'],
             ['./logs/20170512_190434.dfs_path_8x8.log', 9913, 'dfs_8x8_50_17'],
             ['./logs/20170512_190434.dfs_path_8x8.log', 28891, 'dfs_8x8_150_15'],
@@ -89,6 +109,7 @@ def main():
             ['./logs/20170512_190434.dfs_path_8x8.log', 294164, 'dfs_8x8_1500_65'],             
             ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_3500_69'], 
             ['./logs/20170512_190434.dfs_path_8x8.log', 887786, 'dfs_8x8_5000_87'],
+
             ['./logs/20170512_185357.shortest_path_8x8.log', 87, 'shortest_8x8_1_15'],
             ['./logs/20170512_185357.shortest_path_8x8.log', 97502, 'shortest_8x8_500_15'],
             ['./logs/20170512_185357.shortest_path_8x8.log', 195911, 'shortest_8x8_1000_31'],
