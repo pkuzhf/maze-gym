@@ -81,11 +81,23 @@ def main():
     # args: filepath, line number (start from 1), outputfilename
     if len(sys.argv) == 1:
         args = [
-            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_500_68'], 
-            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_1500_68'],             
-            ['./logs/20170512_190434.dfs_path_8x8.log', 490617, 'dfs_8x8_2500_58'], 
-            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_3500_68'], 
-            ['./logs/20170512_190434.dfs_path_8x8.log', 887786, 'dfs_8x8_4500_86']
+            ['./logs/20170512_190434.dfs_path_8x8.log', 87, 'dfs_8x8_1_17'],
+            ['./logs/20170512_190434.dfs_path_8x8.log', 9913, 'dfs_8x8_50_17'],
+            ['./logs/20170512_190434.dfs_path_8x8.log', 28891, 'dfs_8x8_150_15'],
+            ['./logs/20170512_190434.dfs_path_8x8.log', 48298, 'dfs_8x8_250_23'], 
+            ['./logs/20170512_190434.dfs_path_8x8.log', 97598, 'dfs_8x8_500_59'], 
+            ['./logs/20170512_190434.dfs_path_8x8.log', 294164, 'dfs_8x8_1500_65'],             
+            ['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_3500_69'], 
+            ['./logs/20170512_190434.dfs_path_8x8.log', 887786, 'dfs_8x8_5000_87'],
+            ['./logs/20170512_185357.shortest_path_8x8.log', 87, 'shortest_8x8_1_15'],
+            ['./logs/20170512_185357.shortest_path_8x8.log', 97502, 'shortest_8x8_500_15'],
+            ['./logs/20170512_185357.shortest_path_8x8.log', 195911, 'shortest_8x8_1000_31'],
+            ['./logs/20170512_185357.shortest_path_8x8.log', 392733, 'shortest_8x8_2000_33'], 
+            ['./logs/20170512_185357.shortest_path_8x8.log', 589787, 'shortest_8x8_3000_33'], 
+            ['./logs/20170512_185357.shortest_path_8x8.log', 785469, 'shortest_8x8_4000_37'],             
+            ['./logs/20170512_185357.shortest_path_8x8.log', 981931, 'shortest_8x8_5000_37'], 
+            ['./logs/20170512_185357.shortest_path_8x8.log', 1178465, 'shortest_8x8_6000_39']
+            
         ]
         for [filepath, idx, outputname] in args:
             mazemap = read_maze(filepath, idx - 1)
