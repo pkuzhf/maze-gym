@@ -20,6 +20,7 @@ class StrongMazeEnv:
 class Training:
 
     BatchSize= 32
+    BufferSize = 1000
 
     EnvEpsGen = 0.1
     RewardScaleGen = 1

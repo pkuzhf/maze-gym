@@ -13,6 +13,7 @@ import matplotlib.pyplot  as plt
 import os
 import glob
 import seaborn as sns
+from collections import deque
 
 
 # In[140]:
@@ -88,20 +89,47 @@ def plot(log_path):
     skip_factor = int(max_test_times / total_point)
     if skip_factor < 1:
         skip_factor = 1
-    for key in procesed_log.keys():
-        logs = procesed_log[key]
-        if len(logs):
+
+    type_reward = 2
+    if type_reward == 0:
+        accumulate_rewards = [0.] * 100
+        for key in procesed_log.keys():
+            logs = procesed_log[key]
+            for log in logs:
+                accumulate_rewards[log['sub_test_times']] += log['reward']
+                if log['global_test_times'] % skip_factor == 0:
+                    df.append([log['global_test_times'], key, log['sub_test_times'],
+                               accumulate_rewards[log['sub_test_times']] / skip_factor])
+                accumulate_rewards = [0.] * 100
+    elif type_reward == 1:
+        last_reward = 0
+        for key in procesed_log.keys():
+            logs = procesed_log[key]
             idx = 0
-            while True:
+            while idx < len(logs):
                 log = logs[idx]
                 if log['global_test_times'] % skip_factor == 0:
-                    accumulate_rewards = []
-                    accumulate_rewards.append(log['reward'])
-                    df.append([log['global_test_times'], key, log['sub_test_times'],
-                               np.sum(accumulate_rewards) / np.sum(np.asarray(accumulate_rewards)!=0)])
+                    if log['reward'] < 100:
+                        last_reward = log['reward']
+                        df.append([log['global_test_times'], key, log['sub_test_times'], log['reward']])
+                    else:
+                        df.append([log['global_test_times'], key, log['sub_test_times'], last_reward]) #trick
                 idx += 1
-                if idx >= len(logs):
-                    break
+    else:
+        for key in procesed_log.keys():
+            logs = procesed_log[key]
+            idx = 0
+            rewards = deque(maxlen=100)
+            while idx < len(logs):
+                if logs[idx]['reward'] < 100:
+                    rewards.append(logs[idx]['reward'])
+                else:
+                    #rewards.append(logs[idx]['reward'])
+                    pass
+                if logs[idx]['global_test_times'] % skip_factor == 0 and (idx==len(logs)-1 or logs[idx+1]['global_test_times'] != logs[idx]['global_test_times']):
+                    for r in range(len(rewards)):
+                        df.append([logs[idx]['global_test_times'], key, r, rewards[r]])
+                idx += 1
 
     df = pd.DataFrame(df)
     df.columns = ['Training times', 'Type', 'Sub training times', 'Reward']
@@ -112,7 +140,8 @@ def plot(log_path):
     sns.set(style="whitegrid", font_scale=2)
 
 
-    plot = sns.tsplot(data=df[df['Sub training times'] <= minimum_subtimes], time="Training times",
+    plot = sns.tsplot(data=df#[df['Sub training times'] <= minimum_subtimes]
+                      , time="Training times",
                       unit="Sub training times",
                       condition="Type", value="Reward")
 
@@ -124,7 +153,7 @@ def plot(log_path):
 
 
 # In[141]:
-#plot('./logs/20170512_173414.right_hand_path_5x5.log')
+plot('./logs/env_dqn_6x6.20170513_115332.log'); exit(0)
 
 for fd in glob.glob("./logs/*.processed.log"):
     os.remove(fd)
