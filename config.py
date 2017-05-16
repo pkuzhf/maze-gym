@@ -19,8 +19,9 @@ class StrongMazeEnv:
 
 class Training:
 
-    BatchSize= 32
-    BufferSize = 1000
+    BatchSize= 100
+    EnvBufferSize = 10000
+    AgentBufferSize = 10000
 
     EnvEpsGen = 0.1
     RewardScaleGen = 1
@@ -34,8 +35,8 @@ class Training:
     AgentTrainEps_Min = 0.1
     AgentTrainEps_HalfStep = 2000
 
-    EnvWarmup = 32
-    AgentWarmup = 32
+    EnvWarmup = 1000
+    AgentWarmup = 1000
 
     EnvLearningRate = 1e-4
     AgentLearningRate = 1e-4
