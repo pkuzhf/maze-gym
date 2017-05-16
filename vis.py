@@ -105,11 +105,13 @@ def plot(log_path):
     plt.rcParams['figure.figsize'] = (10, 1000)
     sns.set(style="whitegrid", font_scale=2)
 
-    plt.tight_layout()
 
     plot = sns.tsplot(data=df[df['Sub training times'] <= minimum_subtimes], time="Training times",
                       unit="Sub training times",
                       condition="Type", value="Reward")
+
+    plt.tight_layout()
+
     plot.get_figure().savefig(fig_path, format='pdf')
     plt.show()
     plot.clear()
