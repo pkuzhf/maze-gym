@@ -1,10 +1,8 @@
 #!/bin/bash
 t=`date "+%Y%m%d_%H%M%S"`
 task_name=$1.$t
-
 mkdir logs
 mkdir figs
-
 if [ $# -eq 3 ]
 then
   height=$2
