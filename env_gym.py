@@ -166,6 +166,7 @@ class ENV_GYM(gym.Env):
             agent_gym.reset()
 
             fit_this_map = True
+            bonus = 0
             if fit_this_map:
                 self.agent.max_reward = -1e20
                 self.agent.reward_his.clear()
@@ -180,10 +181,11 @@ class ENV_GYM(gym.Env):
                         print('agent rewards: ' + utils.string_values(self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
                         self.agent.reward_his.clear()
                         np.random.seed(None)
+                        bonus += 5
 
                 if config.Game.AgentAction == 4:
                     #return -self.agent.max_reward
-                    return -np.mean(self.agent.reward_his)
+                    return -np.mean(self.agent.reward_his) + bonus
                 else: #return np.mean(self.agent.reward_his[:-10])
                     self.agent.test_reward_his.clear()
                     self.agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)

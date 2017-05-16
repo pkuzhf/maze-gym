@@ -1,5 +1,5 @@
 class Game:
-    Seed = 123456
+    Seed = 1234567
     MaxGameStep = 200
     AgentAction = 4
     Type = ''
@@ -19,7 +19,7 @@ class StrongMazeEnv:
 
 class Training:
 
-    BatchSize= 100
+    BatchSize = 32
     EnvBufferSize = 10000
     AgentBufferSize = 10000
 
