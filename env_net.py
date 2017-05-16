@@ -17,8 +17,8 @@ def get_env_net():
     observation = Input(shape=(1, m, n, d), name='observation_input')
     x = Reshape((m, n, d))(observation)
 
-    #list = [64, 64, 64, 64, 64]
-    list = [32, 32, 32]
+    list = [64, 64, 64, 64, 64]
+    #list = [32, 32, 32]
     for curdim in list:
         x = Conv2D(filters=curdim, kernel_size=(3, 3), padding='same')(x)
         if use_bn:

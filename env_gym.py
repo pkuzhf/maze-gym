@@ -112,13 +112,14 @@ class ENV_GYM(gym.Env):
         if done:
 
             mazemap = copy.deepcopy(self.mazemap)
-            reward = self._get_reward_from_agent(mazemap)
 
             if self.conflict_count or self.invalid_count:
                 print(
                 'env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count))
 
             utils.displayMap(self.mazemap)
+
+            reward = self._get_reward_from_agent(mazemap)
 
             if self.used_agent:
                 print('agent rewards: ' + utils.string_values(self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
@@ -178,12 +179,15 @@ class ENV_GYM(gym.Env):
                         print('agent rewards: ' + utils.string_values(self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
                         self.agent.reward_his.clear()
                         np.random.seed(None)
+
                 if config.Game.AgentAction == 4:
-                    return -self.agent.max_reward
+                    #return -self.agent.max_reward
+                    return -np.mean(self.agent.reward_his)
                 else: #return np.mean(self.agent.reward_his[:-10])
                     self.agent.test_reward_his.clear()
                     self.agent.test(agent_gym, nb_episodes=10, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
                     return -np.mean(self.agent.test_reward_his)
+
             else:
                 gamestep = 0
                 reward_episode = 0

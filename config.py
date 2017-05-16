@@ -29,7 +29,7 @@ class Training:
 
     EnvTrainEps = 1.0
     EnvTrainEps_Min = 0.2
-    EnvTrainEps_HalfStep = 10000
+    EnvTrainEps_HalfStep = 5000
     AgentTrainEps = 1.0
     AgentTrainEps_Min = 0.1
     AgentTrainEps_HalfStep = 2000

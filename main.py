@@ -116,7 +116,7 @@ def run_env_path(env, env_gym, task_name):
 
 def run(agent, env, agent_gym, env_gym, task_name):
 
-    nround = 1000
+    nround = 10000
     model_folder = config.Path.Models
     makedirs(model_folder)
 
@@ -146,5 +146,5 @@ def run(agent, env, agent_gym, env_gym, task_name):
 
 
 if __name__ == "__main__":
-    main()
-    #profile.run("main()", sort=1)
+    #main()
+    profile.run("main()", sort=1)

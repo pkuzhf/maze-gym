@@ -153,13 +153,14 @@ def plot(log_path):
 
 
 # In[141]:
-plot('./logs/env_dqn_6x6.20170513_115332.log'); exit(0)
+#plot('./logs/env_dqn_6x6.20170513_115332.log'); exit(0)
 
 for fd in glob.glob("./logs/*.processed.log"):
     os.remove(fd)
 
 paths = glob.glob('./logs/*.log')
 for log_path in paths:
+    print('working on:' + log_path)
     try:
         plot(log_path)
         print('done:'+log_path)
