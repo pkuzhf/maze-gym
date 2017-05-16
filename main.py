@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["CUDA_VISIBLE_DEVICES"] = "1, 0, 2, 3, 4, 5, 6, 7"
 
 import sys
 import config
@@ -18,8 +18,8 @@ from policy import *
 from mydqn import myDQNAgent as mDQN
 from rl.memory import SequentialMemory
 
-#import keras.backend.tensorflow_backend as KTF
-#KTF.set_session(get_session())
+import keras.backend.tensorflow_backend as KTF
+KTF.set_session(get_session())
 
 def main():
 
@@ -42,19 +42,23 @@ def main():
         config.Map.Height = int(sys.argv[2])
         config.Map.Width = int(sys.argv[3])
 
+    if len(sys.argv) >= 5:
+        config.Training.BatchSize = int(sys.argv[4])
+
+
     np.random.seed(config.Game.Seed)
 
     env_gym = ENV_GYM()
     env_gym.seed(config.Game.Seed)
 
     env_net = get_env_net()
-    env_memory = SequentialMemory(limit=10000, window_length=1)
+    env_memory = SequentialMemory(limit=1000, window_length=1)
     #BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleTrain))
     env_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(),
         eps_forB=config.Training.EnvTrainEps, half_eps_step=config.Training.EnvTrainEps_HalfStep, eps_min=config.Training.EnvTrainEps_Min)
     env_test_policy = BoltzmannQPolicy(tau=get_tau(config.Training.RewardScaleTest))
 
-    env = mDQN(name='env', model=env_net, gamma=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate,
+    env = mDQN(name='env', model=env_net, batch_size=config.Training.BatchSize, gamma=1.0, nb_steps_warmup=config.Training.EnvWarmup, target_model_update=config.Training.EnvTargetModelUpdate,
         enable_dueling_network=True, policy=env_policy, test_policy=env_test_policy, nb_actions=env_gym.action_space.n, memory=env_memory)
     env.compile(Adam(lr=config.Training.EnvLearningRate))
 
@@ -64,13 +68,13 @@ def main():
     agent_gym.seed(config.Game.Seed)
 
     agent_net = get_agent_net()
-    agent_memory = SequentialMemory(limit=10000, window_length=1)
+    agent_memory = SequentialMemory(limit=1000, window_length=1)
 
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
         half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
     agent_test_policy = GreedyQPolicy()
 
-    agent = mDQN(name='agent', model=agent_net, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
+    agent = mDQN(name='agent', model=agent_net, batch_size=config.Training.BatchSize, gamma=1.0, nb_steps_warmup=config.Training.AgentWarmup, target_model_update=config.Training.AgentTargetModelUpdate,
         enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy, nb_actions=agent_gym.action_space.n, memory=agent_memory)
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
 
@@ -102,12 +106,11 @@ def run_env_path(env, env_gym, task_name):
 
     for round in range(nround):
 
-        print('\n\nround train' + str(round) + '/' + str(nround))
-        env.fit(env_gym, nb_episodes=100, min_steps=100, visualize=False, verbose=2)
+        print('\n\nround train ' + str(round) + '/' + str(nround))
+        env.fit(env_gym, nb_episodes=100, min_steps=100+config.Training.EnvWarmup, visualize=False, verbose=2)
         env.nb_steps_warmup = 0
-        env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
-        env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
-
+        #env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
+        #env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
 
 def run(agent, env, agent_gym, env_gym, task_name):
 

@@ -9,7 +9,7 @@ matplotlib.use('Agg')
 import numpy as np
 import pandas as pd
 import json
-import matplotlib.pyplot  as plt
+import matplotlib.pyplot as plt
 
 import glob
 import seaborn as sns
@@ -17,7 +17,7 @@ import seaborn as sns
 
 # In[90]:
 
-log_path = './logs/dfs.20170513_204108.log'
+log_path = './logs/env_dqn_10x10.20170513_115903.log'
 procesed_log_path = log_path.replace('.log', '.processed.log')
 fig_path = log_path.replace('.log', '.pdf')
 is_env = True
@@ -113,7 +113,7 @@ sns.set(style="whitegrid",font_scale=2)
 
 plot = sns.tsplot(data=df[df['Sub training times'] <= minimum_subtimes], time="Training times", unit="Sub training times",
            condition="Type", value="Reward")
-
+plt.tight_layout()
 
 # In[87]:
 

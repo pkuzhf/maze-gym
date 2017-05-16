@@ -144,6 +144,7 @@ class ENV_GYM(gym.Env):
         # return self.rightdown_path(mazemap)
         # return self.rightdownupleft_path(mazemap)
         # return self.rightdown_random_path(mazemap)
+        #return self.shortest_path(mazemap)
 
         if 'dfs' in config.Game.Type:
             return self.dfs_path(mazemap)
@@ -153,7 +154,7 @@ class ENV_GYM(gym.Env):
             return self.shortest_path(mazemap)
         else:
 
-            if 'dqn' not in config.Game.Type:
+            if 'dqn' not in config.Game.Type and 'default' not in config.Game.Type:
                 print('taskname should be dfs, right_hand, shortest, dqn or dqn5')
                 assert False
 
@@ -167,9 +168,12 @@ class ENV_GYM(gym.Env):
             if fit_this_map:
                 self.agent.max_reward = -1e20
                 self.agent.reward_his.clear()
-                self.agent.memory.__init__(10000, window_length=1)
+                self.agent.memory.__init__(1000, window_length=1)
                 # we do not reset the agent network, to accelerate the training.
-                self.agent.fit(agent_gym, nb_episodes=20, min_steps=100, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
+                while True:
+                    self.agent.fit(agent_gym, nb_episodes=10, min_steps=100+self.agent.nb_steps_warmup, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)
+                    if np.min(self.agent.reward_his) != -config.Game.MaxGameStep:
+                        break
                 if config.Game.AgentAction == 4:
                     return -self.agent.max_reward
                 else: #return np.mean(self.agent.reward_his[:-10])
