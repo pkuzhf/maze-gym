@@ -21,6 +21,7 @@ from rl.memory import SequentialMemory
 import keras.backend.tensorflow_backend as KTF
 KTF.set_session(get_session())
 
+
 def main():
 
     argv = '\n\n'
@@ -109,8 +110,9 @@ def run_env_path(env, env_gym, task_name):
         print('\n\nround train ' + str(round) + '/' + str(nround))
         env.fit(env_gym, nb_episodes=100, min_steps=100+config.Training.EnvWarmup, visualize=False, verbose=2)
         env.nb_steps_warmup = 0
-        #env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
-        #env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
+        env.test(env_gym, nb_episodes=10, visualize=False, verbose=2)
+        env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
+
 
 def run(agent, env, agent_gym, env_gym, task_name):
 
@@ -141,6 +143,7 @@ def run(agent, env, agent_gym, env_gym, task_name):
         print('\n\nround save' + str(round) + '/' + str(nround))
         agent.save_weights(model_folder + '/{}_agent_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
         env.save_weights(model_folder + '/{}_generator_model_weights_{}.h5f'.format(task_name, str(round)), overwrite=True)
+
 
 if __name__ == "__main__":
     main()

@@ -47,9 +47,9 @@ def plot(log_path):
                     test_log_begin = False
                     is_map_begin = False
                     continue
-                if line.startswith('(\'env_step\''):
+                if line.startswith('S'):
                     is_map_begin = True
-                    continue
+                    #continue
                 if is_map_begin is True:
                     if line.startswith('agent rewards'):
                         continue
@@ -67,6 +67,7 @@ def plot(log_path):
                             {'global_test_times': global_agent_test_times, 'sub_test_times': sub_test_times,
                              'reward': reward, 'map_string': map_string})
                     map_string = ''
+
     with open(procesed_log_path, 'w') as fout:
         json.dump(procesed_log, fout)
 
@@ -87,18 +88,23 @@ def plot(log_path):
     skip_factor = int(max_test_times / total_point)
     if skip_factor < 1:
         skip_factor = 1
-    accumulate_rewards = [0.] * 100
     for key in procesed_log.keys():
         logs = procesed_log[key]
-        for log in logs:
-            accumulate_rewards[log['sub_test_times']] += log['reward']
-            if log['global_test_times'] % skip_factor == 0:
-                df.append([log['global_test_times'], key, log['sub_test_times'],
-                           accumulate_rewards[log['sub_test_times']] / skip_factor])
-                accumulate_rewards = [0.] * 100
+        if len(logs):
+            idx = 0
+            while True:
+                log = logs[idx]
+                if log['global_test_times'] % skip_factor == 0:
+                    accumulate_rewards = []
+                    accumulate_rewards.append(log['reward'])
+                    df.append([log['global_test_times'], key, log['sub_test_times'],
+                               np.sum(accumulate_rewards) / np.sum(np.asarray(accumulate_rewards)!=0)])
+                idx += 1
+                if idx >= len(logs):
+                    break
+
     df = pd.DataFrame(df)
     df.columns = ['Training times', 'Type', 'Sub training times', 'Reward']
-    # df.count()
     tmp = df[['Training times', 'Sub training times']].groupby(['Training times'])
     minimum_subtimes = tmp['Sub training times'].agg({'max': np.max})['max'].min()
     sns.plt.rcParams['figure.figsize'] = (10, 100)
@@ -118,6 +124,7 @@ def plot(log_path):
 
 
 # In[141]:
+#plot('./logs/20170512_173414.right_hand_path_5x5.log')
 
 for fd in glob.glob("./logs/*.processed.log"):
     os.remove(fd)
