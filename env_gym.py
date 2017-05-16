@@ -168,7 +168,7 @@ class ENV_GYM(gym.Env):
             if fit_this_map:
                 self.agent.max_reward = -1e20
                 self.agent.reward_his.clear()
-                self.agent.memory.__init__(1000, window_length=1)
+                self.agent.memory.__init__(10000, window_length=1)
                 # we do not reset the agent network, to accelerate the training.
                 while True:
                     self.agent.fit(agent_gym, nb_episodes=10, min_steps=100+self.agent.nb_steps_warmup, nb_max_episode_steps=config.Game.MaxGameStep, visualize=False, verbose=0)

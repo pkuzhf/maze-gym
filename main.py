@@ -69,7 +69,7 @@ def main():
     agent_gym.seed(config.Game.Seed)
 
     agent_net = get_agent_net()
-    agent_memory = SequentialMemory(limit=1000, window_length=1)
+    agent_memory = SequentialMemory(limit=10000, window_length=1)
 
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
         half_eps_step=config.Training.AgentTrainEps_HalfStep, eps_min=config.Training.AgentTrainEps_Min)
