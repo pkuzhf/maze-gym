@@ -81,6 +81,7 @@ def main():
     # args: filepath, line number (start from 1), outputfilename
     if len(sys.argv) == 1:
         args = [
+<<<<<<< HEAD
             ['./logs/20170512_190434.dfs_path_8x8.log', 87, 'dfs_8x8_1_16'],
             ['./logs/20170512_190434.dfs_path_8x8.log', 9913, 'dfs_8x8_50_16'],
             ['./logs/20170512_190434.dfs_path_8x8.log', 28891, 'dfs_8x8_150_14'],
