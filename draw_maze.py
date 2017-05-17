@@ -134,11 +134,11 @@ def main():
             ['./logs/20170513_112411.right_hand_path_7x7.log', 1797476, 'rh_7x7_56'],
             ['./logs/right_hand_path_8x8.20170513_112822.log', 1204870, 'rh_8x8_74'],
 
-            ['./logs/20170512_173414.right_hand_path_5x5.log', 1127, 'dqn_5x5_10'], #69289 #69250 #
-            ['./logs/20170512_173414.right_hand_path_5x5.log', 69250, 'dqn_5x5_33_back'],
-            ['./logs/20170512_173631.right_hand_path_6x6.log', 675677, 'dqn_6x6_16'],
-            ['./logs/20170513_112411.right_hand_path_7x7.log', 528339, 'dqn_7x7_30'],
-            ['./logs/20170513_112411.right_hand_path_7x7.log', 528305, 'dqn_7x7_30_back'],
+            ['./logs/env_dqn_GPU4_5x5.20170516_125902.log', 69250, 'dqn_5x5_10'], #69289 #69250 #
+            ['./logs/env_dqn_GPU4_5x5.20170516_125902.log', 1127, 'dqn_5x5_33_back'],
+            ['./logs/env_dqn_6x6.20170513_115332.log', 675677, 'dqn_6x6_16'],
+            ['./logs/env_dqn_7x7.20170513_115306.log', 528339, 'dqn_7x7_30'],
+            ['./logs/env_dqn_7x7.20170513_115306.log', 528305, 'dqn_7x7_30_back'],
             ['./logs/env_dqn_8x8.20170513_115847.log', 483102, 'dqn_8x8_87'],
             ['./logs/env_dqn_8x8.20170513_115847.log', 202867, 'dqn_8x8_87_back'],
         ]
