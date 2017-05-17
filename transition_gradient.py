@@ -36,7 +36,9 @@ from keras.optimizers import *
 from rl.agents.dqn import DQNAgent as DQN
 from policy import *
 from mydqn import myDQNAgent as mDQN
-from rl.memory import SequentialMemory
+from rl.memory import SequentialMemory, RingBuffer
+
+
 
 
 class TransitionGradientENV(gym.Env):
@@ -120,8 +122,8 @@ class TransitionGradientENV(gym.Env):
 
     def get_agent_action(self, state):
         state = copy.deepcopy(state)
-        action = np.argmax(self.agent.forward(state))
-        print('action: ', action)
+        action = self.agent.forward(state)
+        # print('action: ', action)
         return action
 
     def discount_rewards(self, rewards):
@@ -290,6 +292,14 @@ def train_env(env_gym):
             pass
             env_gym.save_model("./models/transition_gradient.h5")
 
+class CleanableMemory(SequentialMemory):
+    def clear(self):
+        self.actions = RingBuffer(self.limit)
+        self.rewards = RingBuffer(self.limit)
+        self.terminals = RingBuffer(self.limit)
+        self.observations = RingBuffer(self.limit)
+
+
 def main():
     argv = '\n\n'
     for arg in sys.argv:
@@ -316,7 +326,7 @@ def main():
     env_gym = TransitionGradientENV()
 
     agent_net = get_agent_net()
-    agent_memory = SequentialMemory(limit=100, window_length=1)
+    agent_memory = CleanableMemory(limit=100, window_length=1)
 
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
                                half_eps_step=config.Training.AgentTrainEps_HalfStep,
@@ -333,10 +343,10 @@ def main():
     env_gym.agent = agent
     for _ in range(50):
         print('Traning Agent\n\n')
-        agent.fit(env_gym, nb_episodes=100, min_steps=100, visualize=False, verbose=2)
+        agent.memory.clear()
+        agent.fit(env_gym, nb_episodes=200, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
-
 
 
 if __name__ == "__main__":

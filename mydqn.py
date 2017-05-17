@@ -154,7 +154,7 @@ class myDQNAgent(DQNAgent):
 
         self.recent_observation = observation
         self.recent_action = action
-
+        # print(action)
         return action
 
     def compile(self, optimizer, metrics=None):
