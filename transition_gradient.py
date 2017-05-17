@@ -10,10 +10,33 @@ from utils import *
 from gym import spaces
 from gym.utils import seeding
 from collections import deque
-from keras.layers import Dense
+from keras.layers import Dense, Lambda, Activation
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras import backend as K
+
+from keras.layers import Input, Dense, Lambda, Layer, Reshape
+from keras.models import Model
+from keras import backend as K
+from keras import metrics
+from keras.models import Model
+from keras.layers import Input, Dense
+from keras.layers.merge import multiply, add
+import sys
+import config
+import profile
+from utils import *
+import datetime
+import numpy as np
+from env_net import *
+from env_gym import ENV_GYM
+from agent_net import *
+from agent_gym import ADVERSARIAL_AGENT_GYM
+from keras.optimizers import *
+from rl.agents.dqn import DQNAgent as DQN
+from policy import *
+from mydqn import myDQNAgent as mDQN
+from rl.memory import SequentialMemory
 
 
 class TransitionGradientENV(gym.Env):
@@ -38,25 +61,41 @@ class TransitionGradientENV(gym.Env):
         self.conflict_count = 0
         self.max_reward = -1e20
         self.reward_his = deque(maxlen=1000)
+        self.global_step = 0
 
         self.used_agent = False
         self.agent_policy = [0.25] * 4
-        self.agent_action_size = 5
+        self.agent_action_size = 4
         self.state_size = config.Map.Height * config.Map.Width * 4
-        self.transition_size = config.Map.Height * config.Map.Width + 1
-        self.discount_factor = 0.99  # decay rate
-        self.learning_rate = 0.001
+        self.transition_size = config.Map.Height * config.Map.Width
+        self.discount_factor = .99  # decay rate
+        # self.learning_rate = 0.001
+        self.latent_dim = 16
 
         self.model = self.build_model()
         self.optimizer = self.optimizer()
-        self.states, self.actions, self.rewards = [], [], []
+        self.states, self.actions, self.rewards = [[],[],[]], [], []
 
     def build_model(self):
-        model = Sequential()
-        model.add(Dense(128, input_dim=self.state_size + self.agent_action_size, activation='relu',
-                        kernel_initializer='glorot_uniform'))
-        model.add(Dense(64, activation='relu', kernel_initializer='glorot_uniform'))
-        model.add(Dense(self.transition_size, activation='softmax', kernel_initializer='glorot_uniform'))
+        self.noise = Input(shape=(self.latent_dim,))
+        self.current_pos = Input(shape=(self.transition_size,))
+        self.potential_pos = Input(shape=(self.transition_size,))
+        self.last_prob = Input(shape=(1,))
+
+        x = Dense(128, activation='relu', kernel_initializer='glorot_uniform')(self.noise)
+        x = Dense(64, activation='relu', kernel_initializer='glorot_uniform')(x)
+        x = Dense(self.transition_size - 1, kernel_initializer='glorot_uniform')(x)
+        self.tmp = x
+        x = Activation('softmax')(x)
+        x = Lambda(lambda xx: K.concatenate([xx, self.last_prob]))(x)
+        self.probs = x
+        x = Lambda(lambda xx: 1. - xx)(x)
+        potential_prob = multiply([self.potential_pos, x])
+        y = Lambda(lambda xx: 1. - K.tile(K.max(xx, 1), self.transition_size), output_shape=(self.transition_size,))(potential_prob)
+        y = Reshape((self.transition_size,))(y)
+        current_prob = multiply([self.current_pos, y])
+        o = add([potential_prob, current_prob])
+        model = Model(inputs=[self.noise, self.current_pos, self.potential_pos, self.last_prob], outputs=o)
         model.summary()
 
         return model
@@ -64,20 +103,26 @@ class TransitionGradientENV(gym.Env):
     def optimizer(self):
         action = K.placeholder(shape=[None, self.transition_size])
         discounted_rewards = K.placeholder(shape=[None, ])
-        good_prob = K.sum(action * self.model.output, axis=1)
+        eps = 10e-7
+        good_prob = K.clip(K.sum(action * self.model.output, axis=1), eps, 1.- eps)
         eligibility = K.log(good_prob) * discounted_rewards
         loss = K.sum(eligibility)
-        optimizer = Adam(lr=self.learning_rate)
+
+        optimizer = Adam()
         updates = optimizer.get_updates(self.model.trainable_weights, [], loss)
-        train = K.function([self.model.input, action, discounted_rewards], [], updates=updates)
+        train = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob, action, discounted_rewards], [loss, self.probs, self.tmp], updates=updates)
         return train
 
-    def get_action(self, state):
-        policy = self.model.predict(state, batch_size=1).flatten()
+    def get_action(self, noise, current_pos_onehot, potential_pos_onehot):
+        policy = self.model.predict([noise, current_pos_onehot, potential_pos_onehot, np.array([[0.]])], batch_size=1)
+        policy = policy.flatten()
         return np.random.choice(self.transition_size, 1, p=policy)[0]
 
     def get_agent_action(self, state):
-        return np.random.randint(0, self.agent_action_size, 1)
+        state = copy.deepcopy(state)
+        action = np.argmax(self.agent.forward(state))
+        print('action: ', action)
+        return action
 
     def discount_rewards(self, rewards):
         discounted_rewards = np.zeros_like(rewards)
@@ -88,7 +133,10 @@ class TransitionGradientENV(gym.Env):
         return discounted_rewards
 
     def memory(self, state, action, reward):
-        self.states.append(state[0])
+        # [noise, current_pos_onehot, potential_pos_onehot]
+        self.states[0].append(state[0][0])
+        self.states[1].append(state[1][0])
+        self.states[2].append(state[2][0])
         self.rewards.append(reward)
         act = np.zeros(self.transition_size)
         act[action] = 1
@@ -98,10 +146,15 @@ class TransitionGradientENV(gym.Env):
         discounted_rewards = np.float32(self.discount_rewards(self.rewards))
         discounted_rewards -= np.mean(discounted_rewards)
         discounted_rewards /= np.std(discounted_rewards)
-        # inputs = self.states, self.actions
-        # np.concatenate((self.states, self.actions)).reshape(-1, self.state_size + self.agent_action_size)
-        self.optimizer([self.states, self.actions, discounted_rewards])
-        self.states, self.actions, self.rewards = [], [], []
+        last_probs = np.zeros((len(self.actions), 1))
+        loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2],last_probs, self.actions, discounted_rewards])
+        if self.global_step  % 100 == 0:
+            print('loss: ', loss)
+            print('map probs:')
+            print(map_probs[0].reshape((3,3)))
+            # print(tmp[0])
+            print('===========================')
+        self.states, self.actions, self.rewards = [[],[],[]], [], []
 
     def load_model(self, name):
         self.model.load_weights(name)
@@ -132,9 +185,7 @@ class TransitionGradientENV(gym.Env):
         return [seed]
 
     def _update_mask(self, action, mask, mazemap, mask_invalid=True):
-
         mask[action] = 1
-
         if mask_invalid:
             for i in range(0, config.Map.Height):
                 for j in range(0, config.Map.Width):
@@ -178,12 +229,8 @@ class TransitionGradientENV(gym.Env):
             done = True
 
         reward = -1
-        current_map = copy.deepcopy(self.mazemap).flatten()
-        action_vector = np.zeros((5,))
-        action_vector[action] = 1
-
-        new_pos = self.get_action(np.concatenate((current_map, action_vector)).reshape(-1,self.state_size + self.agent_action_size))
-        # new_pos = np.random.choice(self.transition_size , 1, p=trainsition_prob)[0]
+        noise, current_pos_onehot, potential_pos_onehot = get_inputs_from_state_and_agent_action(self.mazemap, action, self.latent_dim, self.transition_size)
+        new_pos = self.get_action(noise, current_pos_onehot, potential_pos_onehot)
         x, y = new_pos / config.Map.Width, new_pos % config.Map.Width
         new_source = [x, y]
 
@@ -193,32 +240,27 @@ class TransitionGradientENV(gym.Env):
         self.mazemap[new_source[0], new_source[1]] = utils.Cell.SourceV
         self.source = new_source
         self.gamestep += 1
-        return self.mazemap, reward, done, new_pos
+        return self.mazemap, reward, done, new_pos, noise, current_pos_onehot, potential_pos_onehot
 
     def _step(self, action):
-        assert self.action_space.contains(action)
-        print('mask', self.mask)
-        done, conflict, invalid = self._act(self.mazemap, action, self.mask)
+        done = False
+        if self.gamestep >= config.Game.MaxGameStep:
+            done = True
 
-        if done:
+        reward = -1
+        noise, current_pos_onehot, potential_pos_onehot = get_inputs_from_state_and_agent_action(self.mazemap, action,
+                                                                                                 self.latent_dim,
+                                                                                                 self.transition_size)
+        new_pos = self.get_action(noise, current_pos_onehot, potential_pos_onehot)
+        x, y = new_pos / config.Map.Width, new_pos % config.Map.Width
+        new_source = [x, y]
 
-            mazemap = copy.deepcopy(self.mazemap)
-            reward = self._get_reward_from_agent(mazemap)
-
-            if self.conflict_count or self.invalid_count:
-                print(
-                'env_step', self.gamestep, 'conflict/invalid', '%d / %d' % (self.conflict_count, self.invalid_count))
-
-            utils.displayMap(self.mazemap)
-
-            if self.used_agent:
-                print('agent rewards: ' + utils.string_values(
-                    self.agent.reward_his) + '   agent qvalues: ' + utils.string_values(self.agent.q_values))
-        else:
-            reward = 0
-
+        if self.mazemap[new_source[0], new_source[1], utils.Cell.Target]:
+            done = True
+        self.mazemap[self.source[0], self.source[1]] = utils.Cell.EmptyV
+        self.mazemap[new_source[0], new_source[1]] = utils.Cell.SourceV
+        self.source = new_source
         self.gamestep += 1
-
         return self.mazemap, reward, done, {}
 
     def _get_reward_from_agent(self, mazemap):
@@ -513,6 +555,72 @@ class TransitionGradientENV(gym.Env):
         return Wall_count
 
 
+def get_pos_onehot(index):
+    onehot_vector = np.zeros(config.Map.Height * config.Map.Width)
+    onehot_vector[index] = 1.
+    return onehot_vector
+
+def get_potential_pos_onehot(index, a):
+    x, y = index / config.Map.Width, index % config.Map.Width
+    if a == 0:
+        if y < (config.Map.Width - 1):
+            y += 1
+    if a == 1:
+        if x < (config.Map.Height - 1):
+            x += 1
+    if a == 2:
+        if x > 0:
+            x -= 1
+    if a == 3:
+        if y > 0:
+            y -= 1
+    new_index = x * config.Map.Width + y
+    return get_pos_onehot(new_index)
+
+
+def get_inputs_from_state_and_agent_action(state, action, latent_dim, transition_size):
+    [sx, sy, _, _] = utils.findSourceAndTarget(state)
+    noise = np.ones(latent_dim).reshape((1, latent_dim))
+    index = sx * config.Map.Width + sy
+    current_pos_onehot = get_pos_onehot(index).reshape((1, transition_size))
+    potential_pos_onehot = get_potential_pos_onehot(index, action).reshape((1, transition_size))
+    return noise, current_pos_onehot, potential_pos_onehot
+
+
+def train_env(env_gym):
+    env_gym.reset()
+    # global_step = 0
+    scores, episodes = [], []
+    EPISODES = 1000
+    env_gym.agent.training = True
+    for e in range(EPISODES):
+        done = False
+        score = 0
+        state = env_gym.reset()
+        while not done:
+            # fresh env
+            env_gym.global_step += 1
+
+            # RL choose action based on observation and go one step
+            action = env_gym.get_agent_action(state)
+            next_state, reward, done, new_pos, noise, current_pos_onehot, potential_pos_onehot = env_gym.agent_step(
+                action)
+            action_vector = np.zeros((env_gym.agent_action_size,))
+            action_vector[action] = 1
+            env_gym.memory([noise, current_pos_onehot, potential_pos_onehot], new_pos, reward)
+            score += reward
+            state = next_state
+
+            if done:
+                env_gym.train_episodes()
+                scores.append(score)
+                episodes.append(e)
+                print("episode:", e, "  score:", score, "  time_step:", env_gym.global_step)
+
+        if e % 100 == 0:
+            pass
+            env_gym.save_model("./models/transition_gradient.h5")
+
 def main():
     argv = '\n\n'
     for arg in sys.argv:
@@ -532,46 +640,35 @@ def main():
     if len(sys.argv) >= 4:
         config.Map.Height = int(sys.argv[2])
         config.Map.Width = int(sys.argv[3])
-
-    np.random.seed(config.Game.Seed)
+    config.Map.Height = 3
+    config.Map.Width = 3
+    # np.random.seed(config.Game.Seed)
 
     env_gym = TransitionGradientENV()
-    env_gym.seed(config.Game.Seed)
-    env_gym.reset()
-    # print(env_gym.agent_step(3))
 
-    global_step = 0
-    # agent.load("same_vel_episode2 : 1000")
-    scores, episodes = [], []
-    EPISODES = 1000
-    for e in range(EPISODES):
-        done = False
-        score = 0
-        state = env_gym.reset()
-        state = np.array(state).flatten()
-        while not done:
-            # fresh env
-            global_step += 1
+    agent_net = get_agent_net()
+    agent_memory = SequentialMemory(limit=config.Training.AgentBufferSize, window_length=1)
 
-            # RL choose action based on observation and go one step
-            action = env_gym.get_agent_action(state)
-            next_state, reward, done, new_pos = env_gym.agent_step(action)
-            action_vector = np.zeros((env_gym.agent_action_size,))
-            action_vector[action] = 1
-            state = np.concatenate((state, action_vector)).reshape((1, env_gym.state_size + env_gym.agent_action_size))
-            env_gym.memory(state, new_pos, reward)
-            score += reward
-            state = copy.deepcopy(np.array(next_state).flatten())
+    agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
+                               half_eps_step=config.Training.AgentTrainEps_HalfStep,
+                               eps_min=config.Training.AgentTrainEps_Min)
+    agent_test_policy = GreedyQPolicy()
 
-            if done:
-                env_gym.train_episodes()
-                scores.append(score)
-                episodes.append(e)
-                print("episode:", e, "  score:", score, "  time_step:", global_step)
+    agent = mDQN(name='agent', model=agent_net, batch_size=config.Training.BatchSize, delta_clip=10, gamma=1.0,
+                 nb_steps_warmup=config.Training.AgentWarmup,
+                 target_model_update=config.Training.AgentTargetModelUpdate,
+                 enable_dueling_network=True, policy=agent_policy, test_policy=agent_test_policy,
+                 nb_actions=4, memory=agent_memory)
 
-        if e % 100 == 0:
-            pass
-            env_gym.save_model("./models/transition_gradient.h5")
+    agent.compile(Adam(lr=config.Training.AgentLearningRate))
+    env_gym.agent = agent
+    for _ in range(50):
+        print('Traning Agent\n\n')
+        agent.fit(env_gym, nb_episodes=100, min_steps=100, visualize=False, verbose=2)
+        print('Traning Env\n\n')
+        train_env(env_gym)
+
+
 
 if __name__ == "__main__":
     main()
