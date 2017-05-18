@@ -357,8 +357,8 @@ def get_optimal_policy(prob_dis):
                 p2 = ii * n + jj
                 if dist[p2][target] == -1:
                     continue
-                if best == -1 or best > dist[p2][target]:
-                    best = dist[p2][target]
+                if best == -1 or best > dist[p1][p2] + dist[p2][target]:
+                    best = dist[p1][p2] + dist[p2][target]
                     ans[i][j] = k
     #print dist
     return ans
