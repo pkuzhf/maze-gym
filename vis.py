@@ -121,7 +121,7 @@ def plot(log_path):
             idx = 0
             rewards = deque(maxlen=100)
             while idx < len(logs):
-                if logs[idx]['reward'] < 100:
+                if logs[idx]['reward'] < 1000:
                     rewards.append(logs[idx]['reward'])
                 else:
                     #rewards.append(logs[idx]['reward'])
@@ -153,7 +153,7 @@ def plot(log_path):
 
 
 # In[141]:
-#plot('./logs/env_dqn_6x6.20170513_115332.log'); exit(0)
+plot('./logs/env_dqn_8x8.20170513_115847.log'); exit(0)
 
 for fd in glob.glob("./logs/*.processed.log"):
     os.remove(fd)

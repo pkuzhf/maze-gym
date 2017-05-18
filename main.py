@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1, 0, 2, 3, 4, 5, 6, 7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "" #0, 1, 2, 3, 4, 5, 6, 7"
 
 import sys
 import config
@@ -32,7 +32,7 @@ def main():
     if len(sys.argv) >= 2:
         task_name = sys.argv[1]
     else:
-        task_name = 'default'
+        task_name = 'default3'
 
     if 'dqn5' in task_name:
         config.Game.AgentAction = 5
