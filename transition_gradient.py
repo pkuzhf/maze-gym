@@ -78,6 +78,9 @@ class TransitionGradientENV(gym.Env):
         self.optimizer = self.optimizer()
         self.states, self.actions, self.rewards = [[],[],[]], [], []
 
+        self.agent_policy_type = 'DQN'
+        self.agent_opt_policy = []
+
     def build_model(self):
         self.noise = Input(shape=(self.latent_dim,))
         self.current_pos = Input(shape=(self.transition_size,))
@@ -116,6 +119,7 @@ class TransitionGradientENV(gym.Env):
         optimizer = Adam()
         updates = optimizer.get_updates(self.model.trainable_weights, [], loss)
         train = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob, action, discounted_rewards], [loss, self.probs, self.tmp], updates=updates)
+        self.env_policy = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob], [self.probs])
         return train
 
     def get_action(self, noise, current_pos_onehot, potential_pos_onehot):
@@ -124,6 +128,10 @@ class TransitionGradientENV(gym.Env):
         return np.random.choice(self.transition_size, 1, p=policy)[0]
 
     def get_agent_action(self, state):
+        if self.agent_policy_type == 'OPT':
+            [sx, sy, _, _] = utils.findSourceAndTarget(state)
+            return self.agent_opt_policy[sx, sy]
+
         if np.random.random() < 0.1:
             return np.random.choice(self.agent_action_size, 1)[0]
         state = copy.deepcopy(state)
@@ -154,7 +162,7 @@ class TransitionGradientENV(gym.Env):
         discounted_rewards -= np.mean(discounted_rewards)
         discounted_rewards /= np.std(discounted_rewards)
         last_probs = np.zeros((len(self.actions), 1))
-        loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2],last_probs, self.actions, discounted_rewards])
+        loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2], last_probs, self.actions, discounted_rewards])
         # if self.global_step  % 100 == 0:
         print('loss: ', loss)
         print('map probs:')
@@ -163,6 +171,17 @@ class TransitionGradientENV(gym.Env):
             # print(tmp[0])
         print('===========================')
         self.states, self.actions, self.rewards = [[],[],[]], [], []
+        return probs
+
+    def get_current_env_policy(self):
+        noise, current_pos_onehot, potential_pos_onehot = get_inputs_from_state_and_agent_action(self.mazemap, 0,
+                                                                                                 self.latent_dim,
+                                                                                                 self.transition_size)
+        map_probs = self.env_policy([noise, current_pos_onehot, potential_pos_onehot, np.array([[0.]])])
+
+        print('Current Probs:')
+        probs = map_probs[0].reshape((3, 3))
+        print(probs)
         return probs
 
     def load_model(self, name):
@@ -264,6 +283,7 @@ def train_env(env_gym):
     EPISODES = 500
     env_gym.agent.training = True
     probs = [0.]
+    env_gym.get_current_env_policy()
     for e in range(EPISODES):
         done = False
         score = 0
