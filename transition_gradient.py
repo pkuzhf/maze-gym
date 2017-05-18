@@ -335,9 +335,12 @@ def get_optimal_policy(prob_dis):
                 p2 = ii * n + jj
                 dist[p1][p2] = 1 / (1 - prob_dis[ii][jj])
                 dist[p2][p1] = 1 / (1 - prob_dis[i][j])
+    #print dist
     for i in range(n*n):
         for j in range(n*n):
             for k in range(n*n):
+                if dist[i][k] == -1 or dist[k][j] == -1:
+                    continue
                 if dist[i][j] == -1 or dist[i][j] > dist[i][k] + dist[k][j]:
                     dist[i][j] = dist[i][k] + dist[k][j]
     ans = [[0 for i in range(n)] for j in range(n)]
@@ -352,9 +355,12 @@ def get_optimal_policy(prob_dis):
                 if ii < 0 or ii == n or jj < 0 or jj == n:
                     continue
                 p2 = ii * n + jj
+                if dist[p2][target] == -1:
+                    continue
                 if best == -1 or best > dist[p2][target]:
                     best = dist[p2][target]
                     ans[i][j] = k
+    #print dist
     return ans
 
 
