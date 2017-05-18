@@ -71,7 +71,7 @@ class TransitionGradientENV(gym.Env):
         self.state_size = config.Map.Height * config.Map.Width * 4
         self.transition_size = config.Map.Height * config.Map.Width
         self.discount_factor = .99  # decay rate
-        # self.learning_rate = 0.001
+        self.learning_rate = 0.1
         self.latent_dim = 16
 
         self.model = self.build_model()
@@ -110,7 +110,7 @@ class TransitionGradientENV(gym.Env):
         eligibility = K.log(good_prob) * discounted_rewards
         loss = K.sum(eligibility)
 
-        optimizer = Adam()
+        optimizer = Adam(lr=self.learning_rate)
         updates = optimizer.get_updates(self.model.trainable_weights, [], loss)
         train = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob, action, discounted_rewards], [loss, self.probs, self.tmp], updates=updates)
         return train
@@ -150,12 +150,12 @@ class TransitionGradientENV(gym.Env):
         discounted_rewards /= np.std(discounted_rewards)
         last_probs = np.zeros((len(self.actions), 1))
         loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2],last_probs, self.actions, discounted_rewards])
-        if self.global_step  % 100 == 0:
-            print('loss: ', loss)
-            print('map probs:')
-            print(map_probs[0].reshape((3,3)))
+        # if self.global_step  % 100 == 0:
+        print('loss: ', loss)
+        print('map probs:')
+        print(map_probs[0].reshape((3,3)))
             # print(tmp[0])
-            print('===========================')
+        print('===========================')
         self.states, self.actions, self.rewards = [[],[],[]], [], []
 
     def load_model(self, name):
@@ -262,7 +262,7 @@ def get_inputs_from_state_and_agent_action(state, action, latent_dim, transition
 def train_env(env_gym):
     env_gym.reset()
     scores, episodes = [], []
-    EPISODES = 1000
+    EPISODES = 200
     env_gym.agent.training = True
     for e in range(EPISODES):
         done = False
@@ -326,7 +326,7 @@ def main():
     env_gym = TransitionGradientENV()
 
     agent_net = get_agent_net()
-    agent_memory = CleanableMemory(limit=100, window_length=1)
+    agent_memory = CleanableMemory(limit=config.Training.AgentBufferSize, window_length=1)
 
     agent_policy = EpsABPolicy(policyA=GreedyQPolicy(), policyB=RandomPolicy(), eps_forB=config.Training.AgentTrainEps,
                                half_eps_step=config.Training.AgentTrainEps_HalfStep,
@@ -344,7 +344,7 @@ def main():
     for _ in range(50):
         print('Traning Agent\n\n')
         agent.memory.clear()
-        agent.fit(env_gym, nb_episodes=200, min_steps=100, visualize=False, verbose=2)
+        agent.fit(env_gym, nb_episodes=100, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
