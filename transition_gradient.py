@@ -71,8 +71,8 @@ class TransitionGradientENV(gym.Env):
         self.state_size = config.Map.Height * config.Map.Width * 4
         self.transition_size = config.Map.Height * config.Map.Width
         self.discount_factor = .99  # decay rate
-        self.learning_rate = 0.1
-        self.latent_dim = 16
+        self.learning_rate = 0.01
+        self.latent_dim = 64
 
         self.model = self.build_model()
         self.optimizer = self.optimizer()
@@ -86,8 +86,11 @@ class TransitionGradientENV(gym.Env):
 
         x = Dense(128, activation='relu', kernel_initializer='glorot_uniform')(self.noise)
         x = Dense(64, activation='relu', kernel_initializer='glorot_uniform')(x)
+        x = Dense(64, activation='relu', kernel_initializer='glorot_uniform')(x)
         x = Dense(self.transition_size - 1, kernel_initializer='glorot_uniform')(x)
         self.tmp = x
+        x = Activation('sigmoid')(x)
+        x = Lambda(lambda xx: .001 + xx)(x)
         x = Activation('softmax')(x)
         x = Lambda(lambda xx: K.concatenate([xx, self.last_prob]))(x)
         self.probs = x
@@ -109,8 +112,8 @@ class TransitionGradientENV(gym.Env):
         good_prob = K.clip(K.sum(action * self.model.output, axis=1), eps, 1.- eps)
         eligibility = K.log(good_prob) * discounted_rewards
         loss = K.sum(eligibility)
-
-        optimizer = Adam(lr=self.learning_rate)
+        # lr = self.learning_rate
+        optimizer = Adam()
         updates = optimizer.get_updates(self.model.trainable_weights, [], loss)
         train = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob, action, discounted_rewards], [loss, self.probs, self.tmp], updates=updates)
         return train
@@ -173,14 +176,6 @@ class TransitionGradientENV(gym.Env):
         self.source = np.array([sx, sy])
         self.target = np.array([tx, ty])
         return self.mazemap
-
-    def _getmask(self, mazemap):
-        mask = np.zeros(self.action_space.n)
-        for i in range(config.Map.Height):
-            for j in range(config.Map.Width):
-                if not mazemap[i, j, utils.Cell.Empty]:
-                    mask[i * config.Map.Width + j] = 1
-        return mask
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
