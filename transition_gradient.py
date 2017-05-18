@@ -78,6 +78,8 @@ class TransitionGradientENV(gym.Env):
         self.optimizer = self.optimizer()
         self.states, self.actions, self.rewards = [[],[],[]], [], []
 
+        self.agent_policy_type = 'DQN'
+
     def build_model(self):
         self.noise = Input(shape=(self.latent_dim,))
         self.current_pos = Input(shape=(self.transition_size,))
@@ -125,6 +127,9 @@ class TransitionGradientENV(gym.Env):
         return np.random.choice(self.transition_size, 1, p=policy)[0]
 
     def get_agent_action(self, state):
+        if self.agent_policy_type == 'OPT':
+            pass
+
         if np.random.random() < 0.1:
             return np.random.choice(self.agent_action_size, 1)[0]
         state = copy.deepcopy(state)
