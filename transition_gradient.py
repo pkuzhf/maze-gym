@@ -116,6 +116,7 @@ class TransitionGradientENV(gym.Env):
         optimizer = Adam()
         updates = optimizer.get_updates(self.model.trainable_weights, [], loss)
         train = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob, action, discounted_rewards], [loss, self.probs, self.tmp], updates=updates)
+        self.env_policy = K.function([self.noise, self.current_pos, self.potential_pos, self.last_prob], [self.probs])
         return train
 
     def get_action(self, noise, current_pos_onehot, potential_pos_onehot):
@@ -154,7 +155,7 @@ class TransitionGradientENV(gym.Env):
         discounted_rewards -= np.mean(discounted_rewards)
         discounted_rewards /= np.std(discounted_rewards)
         last_probs = np.zeros((len(self.actions), 1))
-        loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2],last_probs, self.actions, discounted_rewards])
+        loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2], last_probs, self.actions, discounted_rewards])
         # if self.global_step  % 100 == 0:
         print('loss: ', loss)
         print('map probs:')
@@ -163,6 +164,17 @@ class TransitionGradientENV(gym.Env):
             # print(tmp[0])
         print('===========================')
         self.states, self.actions, self.rewards = [[],[],[]], [], []
+        return probs
+
+    def get_current_env_policy(self):
+        noise, current_pos_onehot, potential_pos_onehot = get_inputs_from_state_and_agent_action(self.mazemap, 0,
+                                                                                                 self.latent_dim,
+                                                                                                 self.transition_size)
+        map_probs = self.env_policy([noise, current_pos_onehot, potential_pos_onehot, np.array([[0.]])])
+
+        print('Current Probs:')
+        probs = map_probs[0].reshape((3, 3))
+        print(probs)
         return probs
 
     def load_model(self, name):
@@ -264,6 +276,7 @@ def train_env(env_gym):
     EPISODES = 500
     env_gym.agent.training = True
     probs = [0.]
+    env_gym.get_current_env_policy()
     for e in range(EPISODES):
         done = False
         score = 0
@@ -351,7 +364,7 @@ def main():
     for _ in range(200):
         print('Traning Agent\n\n')
         agent.memory.clear()
-        agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
+        # agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
