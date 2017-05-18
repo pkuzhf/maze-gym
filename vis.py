@@ -1,8 +1,4 @@
-# coding: utf-8
-
-# In[139]:
-
-# %matplotlib inline
+#%matplotlib inline
 import matplotlib
 
 matplotlib.use('Agg')
@@ -132,19 +128,19 @@ def plot(log_path):
                 idx += 1
 
     df = pd.DataFrame(df)
-    df.columns = ['Training times', 'Type', 'Sub training times', 'Reward']
-    tmp = df[['Training times', 'Sub training times']].groupby(['Training times'])
-    minimum_subtimes = tmp['Sub training times'].agg({'max': np.max})['max'].min()
+    df.columns = ['Training Round', 'Type', 'Sub training Round', 'Generator Return']
+    tmp = df[['Training Round', 'Sub training Round']].groupby(['Training Round'])
+    minimum_subtimes = tmp['Sub training Round'].agg({'max': np.max})['max'].min()
     sns.plt.rcParams['figure.figsize'] = (10, 100)
     plt.rcParams['figure.figsize'] = (10, 1000)
-    sns.set(style="whitegrid", font_scale=2)
+    sns.set(style="whitegrid", font_scale=3)
 
 
-    plot = sns.tsplot(data=df#[df['Sub training times'] <= minimum_subtimes]
-                      , time="Training times",
-                      unit="Sub training times",
-                      condition="Type", value="Reward")
-
+    plot = sns.tsplot(data=df#[df['Sub training round'] <= minimum_subtimes]
+                      , time="Training Round",
+                      unit="Sub training Round",
+                      condition="Type", value="Generator Return")
+    plot.legend_.remove()
     plt.tight_layout()
 
     plot.get_figure().savefig(fig_path, format='pdf')
