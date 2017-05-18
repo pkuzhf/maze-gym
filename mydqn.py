@@ -76,15 +76,12 @@ class myDQNAgent(DQNAgent):
 
         episode = 0
         while episode<nb_episodes or self.step < min_steps:
-
             callbacks.on_episode_begin(episode)
             episode_step = 0
             episode_reward = 0.
             self.reset_states()
             observation = deepcopy(env.reset())
-
             while True:
-
                 callbacks.on_step_begin(episode_step)
 
                 q_values = self.compute_q_values([observation])  # only for windows 1
@@ -157,7 +154,7 @@ class myDQNAgent(DQNAgent):
 
         self.recent_observation = observation
         self.recent_action = action
-
+        # print(action)
         return action
 
     def compile(self, optimizer, metrics=None):
