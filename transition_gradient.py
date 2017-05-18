@@ -364,7 +364,7 @@ def main():
     for _ in range(200):
         print('Traning Agent\n\n')
         agent.memory.clear()
-        # agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
+        agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
