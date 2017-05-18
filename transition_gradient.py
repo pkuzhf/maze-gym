@@ -93,7 +93,7 @@ class TransitionGradientENV(gym.Env):
         x = Dense(self.transition_size - 1, kernel_initializer='glorot_uniform')(x)
         self.tmp = x
         x = Activation('sigmoid')(x)
-        x = Lambda(lambda xx: xx * 2. + 0.1)(x)
+        x = Lambda(lambda xx: xx * 4. + 0.1)(x)
         x = Activation('softmax')(x)
         x = Lambda(lambda xx: K.concatenate([xx, self.last_prob]))(x)
         self.probs = x
@@ -164,12 +164,12 @@ class TransitionGradientENV(gym.Env):
         last_probs = np.zeros((len(self.actions), 1))
         loss, map_probs, tmp = self.optimizer([self.states[0], self.states[1], self.states[2], last_probs, self.actions, discounted_rewards])
         # if self.global_step  % 100 == 0:
-        print('loss: ', loss)
-        print('map probs:')
-        probs = map_probs[0].reshape((3,3))
-        print(probs)
-            # print(tmp[0])
-        print('===========================')
+        # print('loss: ', loss)
+        # print('map probs:')
+        probs = map_probs[0].reshape((config.Map.Width,config.Map.Height))
+        # print(probs)
+        #     # print(tmp[0])
+        # print('===========================')
         self.states, self.actions, self.rewards = [[],[],[]], [], []
         return probs
 
@@ -180,11 +180,11 @@ class TransitionGradientENV(gym.Env):
         map_probs = self.env_policy([noise, current_pos_onehot, potential_pos_onehot, np.array([[0.]])])
 
         print('Current Probs:')
-        probs = map_probs[0].reshape((3, 3))
+        probs = map_probs[0].reshape((config.Map.Width, config.Map.Height))
         print(probs)
-        self.agent_opt_policy = get_optimal_policy(probs)
-        print('Current agent_opt_policy')
-        print(self.agent_opt_policy)
+        # self.agent_opt_policy = get_optimal_policy(probs)
+        # print('Current agent_opt_policy')
+        # print(self.agent_opt_policy)
         return probs
 
     def load_model(self, name):
@@ -394,8 +394,8 @@ def main():
     if len(sys.argv) >= 4:
         config.Map.Height = int(sys.argv[2])
         config.Map.Width = int(sys.argv[3])
-    config.Map.Height = 3
-    config.Map.Width = 3
+    # config.Map.Height = 5
+    # config.Map.Width = 5
     # np.random.seed(config.Game.Seed)
 
     env_gym = TransitionGradientENV()
@@ -418,8 +418,8 @@ def main():
     env_gym.agent = agent
     for _ in range(200):
         print('Traning Agent\n\n')
-        # agent.memory.clear()
-        # agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
+        agent.memory.clear()
+        agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
