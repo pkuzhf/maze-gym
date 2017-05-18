@@ -89,8 +89,8 @@ class TransitionGradientENV(gym.Env):
         x = Dense(64, activation='relu', kernel_initializer='glorot_uniform')(x)
         x = Dense(self.transition_size - 1, kernel_initializer='glorot_uniform')(x)
         self.tmp = x
-        x = Activation('sigmoid')(x)
-        x = Lambda(lambda xx: .001 + xx)(x)
+        x = Activation('tanh')(x)
+        x = Lambda(lambda xx: 10e-1 + xx)(x)
         x = Activation('softmax')(x)
         x = Lambda(lambda xx: K.concatenate([xx, self.last_prob]))(x)
         self.probs = x
