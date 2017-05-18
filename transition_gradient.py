@@ -84,13 +84,13 @@ class TransitionGradientENV(gym.Env):
         self.potential_pos = Input(shape=(self.transition_size,))
         self.last_prob = Input(shape=(1,))
 
-        x = Dense(128, activation='relu', kernel_initializer='glorot_uniform')(self.noise)
-        x = Dense(64, activation='relu', kernel_initializer='glorot_uniform')(x)
-        x = Dense(64, activation='relu', kernel_initializer='glorot_uniform')(x)
+        x = Dense(128, activation='tanh', kernel_initializer='glorot_uniform')(self.noise)
+        x = Dense(64, activation='tanh', kernel_initializer='glorot_uniform')(x)
+        x = Dense(64, activation='tanh', kernel_initializer='glorot_uniform')(x)
         x = Dense(self.transition_size - 1, kernel_initializer='glorot_uniform')(x)
         self.tmp = x
-        x = Activation('tanh')(x)
-        x = Lambda(lambda xx: 10e-1 + xx)(x)
+        x = Activation('sigmoid')(x)
+        x = Lambda(lambda xx: xx * 2. + 0.1)(x)
         x = Activation('softmax')(x)
         x = Lambda(lambda xx: K.concatenate([xx, self.last_prob]))(x)
         self.probs = x
@@ -124,6 +124,8 @@ class TransitionGradientENV(gym.Env):
         return np.random.choice(self.transition_size, 1, p=policy)[0]
 
     def get_agent_action(self, state):
+        if np.random.random() < 0.1:
+            return np.random.choice(self.agent_action_size, 1)[0]
         state = copy.deepcopy(state)
         action = self.agent.forward(state)
         # print('action: ', action)
@@ -156,10 +158,12 @@ class TransitionGradientENV(gym.Env):
         # if self.global_step  % 100 == 0:
         print('loss: ', loss)
         print('map probs:')
-        print(map_probs[0].reshape((3,3)))
+        probs = map_probs[0].reshape((3,3))
+        print(probs)
             # print(tmp[0])
         print('===========================')
         self.states, self.actions, self.rewards = [[],[],[]], [], []
+        return probs
 
     def load_model(self, name):
         self.model.load_weights(name)
@@ -257,8 +261,9 @@ def get_inputs_from_state_and_agent_action(state, action, latent_dim, transition
 def train_env(env_gym):
     env_gym.reset()
     scores, episodes = [], []
-    EPISODES = 200
+    EPISODES = 500
     env_gym.agent.training = True
+    probs = [0.]
     for e in range(EPISODES):
         done = False
         score = 0
@@ -277,15 +282,22 @@ def train_env(env_gym):
             score += reward
             state = next_state
 
-            if done:
-                env_gym.train_episodes()
+            if done and ((e + 1) % 10 == 0 or e == EPISODES-1):
+                probs = env_gym.train_episodes()
                 scores.append(score)
                 episodes.append(e)
                 print("episode:", e, "  score:", score, "  time_step:", env_gym.global_step)
 
+        if np.max(probs) > 0.75:
+            break
+        if len(scores) > 3:
+            if np.mean(scores[-3:]) <= -150:
+                break
+
         if e % 100 == 0:
             pass
             env_gym.save_model("./models/transition_gradient.h5")
+
 
 class CleanableMemory(SequentialMemory):
     def clear(self):
@@ -336,10 +348,10 @@ def main():
 
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
     env_gym.agent = agent
-    for _ in range(50):
+    for _ in range(200):
         print('Traning Agent\n\n')
         agent.memory.clear()
-        agent.fit(env_gym, nb_episodes=100, min_steps=100, visualize=False, verbose=2)
+        agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
