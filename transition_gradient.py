@@ -130,7 +130,7 @@ class TransitionGradientENV(gym.Env):
     def get_agent_action(self, state):
         if self.agent_policy_type == 'OPT':
             [sx, sy, _, _] = utils.findSourceAndTarget(state)
-            return self.agent_opt_policy[sx, sy]
+            return self.agent_opt_policy[sx][sy]
 
         if np.random.random() < 0.1:
             return np.random.choice(self.agent_action_size, 1)[0]
@@ -182,6 +182,9 @@ class TransitionGradientENV(gym.Env):
         print('Current Probs:')
         probs = map_probs[0].reshape((3, 3))
         print(probs)
+        self.agent_opt_policy = get_optimal_policy(probs)
+        print('Current agent_opt_policy')
+        print(self.agent_opt_policy)
         return probs
 
     def load_model(self, name):
@@ -396,7 +399,7 @@ def main():
     # np.random.seed(config.Game.Seed)
 
     env_gym = TransitionGradientENV()
-
+    env_gym.agent_policy_type = 'OPT'
     agent_net = get_agent_net()
     agent_memory = CleanableMemory(limit=config.Training.AgentBufferSize, window_length=1)
 
@@ -415,8 +418,8 @@ def main():
     env_gym.agent = agent
     for _ in range(200):
         print('Traning Agent\n\n')
-        agent.memory.clear()
-        agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
+        # agent.memory.clear()
+        # agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
