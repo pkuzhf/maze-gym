@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import numpy as np
 import pandas as pd
 import json
-import matplotlib.pyplot  as plt
+import matplotlib.pyplot as plt
 import os
 import glob
 import seaborn as sns
@@ -132,7 +132,9 @@ def plot(log_path):
     tmp = df[['Training Round', 'Sub training Round']].groupby(['Training Round'])
     minimum_subtimes = tmp['Sub training Round'].agg({'max': np.max})['max'].min()
     sns.plt.rcParams['figure.figsize'] = (10, 100)
+
     plt.rcParams['figure.figsize'] = (10, 1000)
+
     sns.set(style="whitegrid", font_scale=3)
 
 
@@ -140,6 +142,7 @@ def plot(log_path):
                       , time="Training Round",
                       unit="Sub training Round",
                       condition="Type", value="Generator Return")
+
     plot.legend_.remove()
     plt.tight_layout()
 
