@@ -54,7 +54,7 @@ def draw_maze(mazemap, filename):
     p = patches.Rectangle((0, 0), 1, 1, fill = False)
     ax.add_patch(p)
 
-    fig.savefig(path + '/' + filename + '.pdf', dpi=90, bbox_inches='tight')
+    fig.savefig(path + '/' + filename + '.png', dpi=90, bbox_inches='tight')
 
 mazemap = [[2, 0], [1, 3]]
 
@@ -91,14 +91,14 @@ def main():
             #['./logs/env_dqn_8x8.20170513_115847.log', 60189, 'dqn_8x8_3000_14_back2'],
             #['./logs/env_dqn_8x8.20170513_115847.log', 82366, 'dqn_8x8_4000_30'],
             #['./logs/env_dqn_8x8.20170513_115847.log', 122473, 'dqn_8x8_6000_69'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 50144,  'dqn_8x8_02500_16'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 104462, 'dqn_8x8_05000_35'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 204913, 'dqn_8x8_10000_28'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 305373, 'dqn_8x8_15000_30'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 401909, 'dqn_8x8_20000_21'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 502388, 'dqn_8x8_25000_28'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 612932, 'dqn_8x8_30000_34'],
-            ['./logs/env_dqn_8x8.20170513_115847.log', 715352, 'dqn_8x8_35000_25'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 50144,  'dqn_8x8_02500_16'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 104462, 'dqn_8x8_05000_35'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 204913, 'dqn_8x8_10000_28'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 305373, 'dqn_8x8_15000_30'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 401909, 'dqn_8x8_20000_21'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 502388, 'dqn_8x8_25000_28'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 612932, 'dqn_8x8_30000_34'],
+            # ['./logs/env_dqn_8x8.20170513_115847.log', 715352, 'dqn_8x8_35000_25'],
 
 
             #['./logs/20170512_190434.dfs_path_8x8.log', 87, 'dfs_8x8_1_16'],
@@ -110,14 +110,14 @@ def main():
             #['./logs/20170512_190434.dfs_path_8x8.log', 687097, 'dfs_8x8_3500_68'],
             #['./logs/20170512_190434.dfs_path_8x8.log', 887786, 'dfs_8x8_5000_86'],
 
-            #['./logs/20170512_185357.shortest_path_8x8.log', 87, 'shortest_8x8_1_14'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 97502, 'shortest_8x8_500_14'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 195911, 'shortest_8x8_1000_30'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 392733, 'shortest_8x8_2000_32'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 589787, 'shortest_8x8_3000_32'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 785469, 'shortest_8x8_4000_36'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 981931, 'shortest_8x8_5000_36'],
-            #['./logs/20170512_185357.shortest_path_8x8.log', 1178465, 'shortest_8x8_6000_38'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 87, 'shortest_8x8_1_14'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 97502, 'shortest_8x8_500_14'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 195911, 'shortest_8x8_1000_30'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 392733, 'shortest_8x8_2000_32'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 589787, 'shortest_8x8_3000_32'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 785469, 'shortest_8x8_4000_36'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 981931, 'shortest_8x8_5000_36'],
+            # ['./logs/20170512_185357.shortest_path_8x8.log', 1178465, 'shortest_8x8_6000_38'],
 
             #['./logs/env_dqn_8x8.20170513_115847.log', 443, 'dqn_8x8_1_14'],
             #['./logs/env_dqn_8x8.20170513_115847.log', 11819, 'dqn_8x8_500_14'],
@@ -161,6 +161,26 @@ def main():
             #['./logs/env_dqn_7x7.20170513_115306.log', 528305, 'dqn_7x7_30_back'],
             #['./logs/env_dqn_8x8.20170513_115847.log', 483102, 'dqn_8x8_87'],
             #['./logs/env_dqn_8x8.20170513_115847.log', 202867, 'dqn_8x8_87_back'],
+
+            ['./logs/20170512_183854.shortest_path_5x5.log', 87, 'shortest_5x5_87_9'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 255, 'shortest_5x5_255_9'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 478, 'shortest_5x5_478_9'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 5991, 'shortest_5x5_5991_9'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 11006, 'shortest_5x5_11006_9'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 47534, 'shortest_5x5_47534_11'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 47606, 'shortest_5x5_47606_11'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 48500, 'shortest_5x5_48500_11'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 51762, 'shortest_5x5_51762_13'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 58352, 'shortest_5x5_58352_13'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 59327, 'shortest_5x5_59327_13'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 100005, 'shortest_5x5_100005_13'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 125132, 'shortest_5x5_125132_13'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 125132, 'shortest_5x5_125132_13'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 131417, 'shortest_5x5_131417_15'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 146250, 'shortest_5x5_146250_15'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 162621, 'shortest_5x5_162621_15'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 162657, 'shortest_5x5_162657_15'],
+            ['./logs/20170512_183854.shortest_path_5x5.log', 162753, 'shortest_5x5_162753_17'],
         ]
         for [filepath, idx, outputname] in args:
             mazemap = read_maze(filepath, idx - 1)
