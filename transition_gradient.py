@@ -93,7 +93,7 @@ class TransitionGradientENV(gym.Env):
         x = Dense(self.transition_size - 1, kernel_initializer='glorot_uniform')(x)
         self.tmp = x
         x = Activation('sigmoid')(x)
-        x = Lambda(lambda xx: xx * 4. + 0.1)(x)
+        x = Lambda(lambda xx: xx * 3. + 0.1)(x)
         x = Activation('softmax')(x)
         x = Lambda(lambda xx: K.concatenate([xx, self.last_prob]))(x)
         self.probs = x
@@ -283,7 +283,7 @@ def get_inputs_from_state_and_agent_action(state, action, latent_dim, transition
 def train_env(env_gym):
     env_gym.reset()
     scores, episodes = [], []
-    EPISODES = 500
+    EPISODES = 2000
     env_gym.agent.training = True
     probs = [0.]
     env_gym.get_current_env_policy()
@@ -399,7 +399,7 @@ def main():
     # np.random.seed(config.Game.Seed)
 
     env_gym = TransitionGradientENV()
-    env_gym.agent_policy_type = 'OPT'
+    # env_gym.agent_policy_type = 'OPT'
     agent_net = get_agent_net()
     agent_memory = CleanableMemory(limit=config.Training.AgentBufferSize, window_length=1)
 
@@ -416,10 +416,10 @@ def main():
 
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
     env_gym.agent = agent
-    for _ in range(200):
+    for _ in range(2000):
         print('Traning Agent\n\n')
         agent.memory.clear()
-        agent.fit(env_gym, nb_episodes=70, min_steps=100, visualize=False, verbose=2)
+        agent.fit(env_gym, nb_episodes=150, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
