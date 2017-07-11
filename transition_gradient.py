@@ -181,10 +181,11 @@ class TransitionGradientENV(gym.Env):
 
         print('Current Probs:')
         probs = map_probs[0].reshape((config.Map.Width, config.Map.Height))
-        print(probs)
-        # self.agent_opt_policy = get_optimal_policy(probs)
-        # print('Current agent_opt_policy')
-        # print(self.agent_opt_policy)
+        # print(probs)
+        if self.agent_policy_type == 'OPT':
+            self.agent_opt_policy = get_optimal_policy(probs)
+            print('Current agent_opt_policy')
+            print(self.agent_opt_policy)
         return probs
 
     def load_model(self, name):
@@ -380,11 +381,15 @@ def main():
     for arg in sys.argv:
         argv += arg + ' '
     print(argv)
-
+    task_name = 'DQN'
     if len(sys.argv) >= 2:
-        task_name = sys.argv[1]
+        if sys.argv[1] in ['DQN', 'OPT']:
+            task_name = sys.argv[1]
+        else:
+            print('invalid task name')
+            exit()
     else:
-        task_name = 'default'
+        task_name = 'DQN'
 
     if 'dqn5' in task_name:
         config.Game.AgentAction = 5
@@ -399,7 +404,7 @@ def main():
     # np.random.seed(config.Game.Seed)
 
     env_gym = TransitionGradientENV()
-    # env_gym.agent_policy_type = 'OPT'
+    env_gym.agent_policy_type = task_name
     agent_net = get_agent_net()
     agent_memory = CleanableMemory(limit=config.Training.AgentBufferSize, window_length=1)
 
@@ -417,9 +422,10 @@ def main():
     agent.compile(Adam(lr=config.Training.AgentLearningRate))
     env_gym.agent = agent
     for _ in range(2000):
-        print('Traning Agent\n\n')
-        agent.memory.clear()
-        agent.fit(env_gym, nb_episodes=150, min_steps=100, visualize=False, verbose=2)
+        if task_name == 'DQN':
+            print('Traning Agent\n\n')
+            agent.memory.clear()
+            agent.fit(env_gym, nb_episodes=150, min_steps=100, visualize=False, verbose=2)
         print('Traning Env\n\n')
         train_env(env_gym)
 
