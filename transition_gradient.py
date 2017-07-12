@@ -181,7 +181,7 @@ class TransitionGradientENV(gym.Env):
 
         print('Current Probs:')
         probs = map_probs[0].reshape((config.Map.Width, config.Map.Height))
-        # print(probs)
+        print(probs)
         if self.agent_policy_type == 'OPT':
             self.agent_opt_policy = get_optimal_policy(probs)
             print('Current agent_opt_policy')
