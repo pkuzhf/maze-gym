@@ -4,7 +4,7 @@ Our experiments depend on Keras-RL(https://github.com/matthiasplappert/keras-rl)
 
 1. Test transition gradient on soft wall maze
 
-Run "python transition_gradient.py". 
+Run "python transition_gradient.py DQN 5 5" and "python transition_gradient.py OPT 5 5". 
 
 Parameters can be set in the main function in this file.
 
