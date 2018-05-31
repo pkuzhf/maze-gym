@@ -1,7 +1,6 @@
 import numpy as np
 import config
 import os
-from keras.layers import Layer
 import tensorflow as tf
 from collections import deque
 

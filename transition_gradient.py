@@ -15,7 +15,7 @@ from keras.optimizers import Adam
 from keras.models import Sequential
 from keras import backend as K
 
-from keras.layers import Input, Dense, Lambda, Layer, Reshape
+from keras.layers import Input, Dense, Lambda, Reshape
 from keras.models import Model
 from keras import backend as K
 from keras import metrics
